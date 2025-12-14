@@ -1,0 +1,318 @@
+package com.matedroid.ui.screens.settings
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.matedroid.ui.theme.MateDroidTheme
+import com.matedroid.ui.theme.StatusError
+import com.matedroid.ui.theme.StatusSuccess
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    onNavigateToDashboard: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("MateDroid Settings") }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        if (uiState.isLoading) {
+            LoadingContent(modifier = Modifier.padding(paddingValues))
+        } else {
+            SettingsContent(
+                modifier = Modifier.padding(paddingValues),
+                uiState = uiState,
+                onServerUrlChange = viewModel::updateServerUrl,
+                onApiTokenChange = viewModel::updateApiToken,
+                onTestConnection = viewModel::testConnection,
+                onSave = { viewModel.saveSettings(onNavigateToDashboard) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Loading settings...")
+    }
+}
+
+@Composable
+private fun SettingsContent(
+    modifier: Modifier = Modifier,
+    uiState: SettingsUiState,
+    onServerUrlChange: (String) -> Unit,
+    onApiTokenChange: (String) -> Unit,
+    onTestConnection: () -> Unit,
+    onSave: () -> Unit
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Connect to TeslamateApi",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Enter your TeslamateApi server URL and optional API token to connect.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = uiState.serverUrl,
+            onValueChange = onServerUrlChange,
+            label = { Text("Server URL") },
+            placeholder = { Text("https://teslamate.example.com") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("urlInput"),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            enabled = !uiState.isTesting && !uiState.isSaving
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = uiState.apiToken,
+            onValueChange = onApiTokenChange,
+            label = { Text("API Token (optional)") },
+            placeholder = { Text("Your API token") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("tokenInput"),
+            singleLine = true,
+            visualTransformation = if (passwordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) {
+                            Icons.Filled.VisibilityOff
+                        } else {
+                            Icons.Filled.Visibility
+                        },
+                        contentDescription = if (passwordVisible) {
+                            "Hide token"
+                        } else {
+                            "Show token"
+                        }
+                    )
+                }
+            },
+            enabled = !uiState.isTesting && !uiState.isSaving
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Leave empty if your TeslamateApi doesn't require authentication.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Test result card
+        uiState.testResult?.let { result ->
+            TestResultCard(result = result)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onTestConnection,
+                enabled = uiState.serverUrl.isNotBlank() && !uiState.isTesting && !uiState.isSaving,
+                modifier = Modifier.weight(1f)
+            ) {
+                if (uiState.isTesting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text("Test Connection")
+            }
+
+            Button(
+                onClick = onSave,
+                enabled = uiState.serverUrl.isNotBlank() && !uiState.isTesting && !uiState.isSaving,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("saveButton")
+            ) {
+                if (uiState.isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text("Save & Continue")
+            }
+        }
+    }
+}
+
+@Composable
+private fun TestResultCard(result: TestResult) {
+    val (icon, color, text) = when (result) {
+        is TestResult.Success -> Triple(
+            Icons.Filled.CheckCircle,
+            StatusSuccess,
+            "Connection successful!"
+        )
+        is TestResult.Failure -> Triple(
+            Icons.Filled.Error,
+            StatusError,
+            "Connection failed: ${result.message}"
+        )
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.1f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = text,
+                color = color,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    MateDroidTheme {
+        SettingsContent(
+            uiState = SettingsUiState(isLoading = false),
+            onServerUrlChange = {},
+            onApiTokenChange = {},
+            onTestConnection = {},
+            onSave = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenWithResultPreview() {
+    MateDroidTheme {
+        SettingsContent(
+            uiState = SettingsUiState(
+                isLoading = false,
+                serverUrl = "https://teslamate.example.com",
+                testResult = TestResult.Success
+            ),
+            onServerUrlChange = {},
+            onApiTokenChange = {},
+            onTestConnection = {},
+            onSave = {}
+        )
+    }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Tesla-inspired "M" for MateDroid -->
+    <path
+        android:fillColor="#E31937"
+        android:pathData="M54,24L24,84h12l18,-40l18,40h12L54,24z"/>
+</vector>

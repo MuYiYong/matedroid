@@ -1,0 +1,110 @@
+# MateDroid
+
+A native Android application for viewing Tesla vehicle data from your self-hosted [Teslamate](https://github.com/adriankumpf/teslamate) instance via the [TeslamateApi](https://github.com/tobiasehlert/teslamateapi).
+
+## Features
+
+- **Dashboard** - Real-time vehicle status at a glance
+- **Charging History** - View all charging sessions with statistics and charts
+- **Drive History** - Track trips with efficiency metrics
+- **Battery Health** - Monitor battery degradation over time
+- **Software Updates** - Track update history
+
+## Requirements
+
+- Android 8.0 (API 26) or higher
+- A running [Teslamate](https://github.com/adriankumpf/teslamate) instance
+- [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) deployed and accessible
+
+## Installation
+
+### From Release (Recommended)
+
+Download the latest APK from the [Releases](https://github.com/yourusername/matedroid/releases) page and install it on your Android device.
+
+### Build from Source
+
+#### Prerequisites
+
+- Java 17 or higher
+- Android SDK (API 35)
+- (Optional) Android Studio
+
+#### Build Steps
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/matedroid.git
+cd matedroid
+
+# Build debug APK
+./gradlew assembleDebug
+
+# The APK will be at: app/build/outputs/apk/debug/app-debug.apk
+
+# Or install directly to a connected device/emulator
+./gradlew installDebug
+```
+
+## Development
+
+### Project Structure
+
+```
+matedroid/
+├── app/src/main/java/com/matedroid/
+│   ├── data/           # Data layer (API, repository, local storage)
+│   ├── domain/         # Domain layer (models, use cases)
+│   ├── ui/             # UI layer (screens, components, theme)
+│   └── di/             # Dependency injection modules
+├── gradle/             # Gradle wrapper and version catalog
+└── PLAN.md             # Detailed implementation plan
+```
+
+### Tech Stack
+
+- **Language**: Kotlin
+- **UI**: Jetpack Compose with Material Design 3
+- **Architecture**: MVVM + Clean Architecture
+- **DI**: Hilt
+- **Networking**: Retrofit + OkHttp + Moshi
+- **Local Storage**: DataStore
+- **Charts**: Vico
+
+### Running Tests
+
+```bash
+# Unit tests
+./gradlew test
+
+# Instrumented tests (requires emulator/device)
+./gradlew connectedAndroidTest
+```
+
+### Development Workflow
+
+1. Start your Android emulator or connect a device
+2. Build and install: `./gradlew installDebug`
+3. View logs: `adb logcat | grep -i matedroid`
+
+Or use Android Studio:
+1. Open the project folder
+2. Wait for Gradle sync
+3. Click Run (green play button)
+
+## Configuration
+
+On first launch, you'll be prompted to configure your TeslamateApi connection:
+
+1. **Server URL**: Your TeslamateApi instance URL (e.g., `https://teslamate-api.example.com`)
+2. **API Token**: (Optional) If your instance requires authentication
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- [Teslamate](https://github.com/adriankumpf/teslamate) - Self-hosted Tesla data logger
+- [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) - RESTful API for Teslamate
+- [t-buddy](https://github.com/garanda21/t-buddy) - iOS app inspiration
