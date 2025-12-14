@@ -2,8 +2,9 @@ package com.matedroid.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.matedroid.data.local.AppSettings
 import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.repository.ApiResult
+import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,8 @@ sealed class TestResult {
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val repository: TeslamateRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -70,36 +72,36 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTesting = true, testResult = null, error = null)
 
-            try {
-                val url = _uiState.value.serverUrl.trimEnd('/')
-                if (url.isBlank()) {
-                    _uiState.value = _uiState.value.copy(
-                        isTesting = false,
-                        testResult = TestResult.Failure("Server URL is required")
-                    )
-                    return@launch
-                }
-
-                // TODO: Implement actual API ping test in Phase 2
-                // For now, just validate URL format
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    _uiState.value = _uiState.value.copy(
-                        isTesting = false,
-                        testResult = TestResult.Failure("URL must start with http:// or https://")
-                    )
-                    return@launch
-                }
-
-                // Simulate successful test for now
+            val url = _uiState.value.serverUrl.trimEnd('/')
+            if (url.isBlank()) {
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
-                    testResult = TestResult.Success
+                    testResult = TestResult.Failure("Server URL is required")
                 )
-            } catch (e: Exception) {
+                return@launch
+            }
+
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
-                    testResult = TestResult.Failure(e.message ?: "Unknown error")
+                    testResult = TestResult.Failure("URL must start with http:// or https://")
                 )
+                return@launch
+            }
+
+            when (val result = repository.testConnection(url)) {
+                is ApiResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isTesting = false,
+                        testResult = TestResult.Success
+                    )
+                }
+                is ApiResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isTesting = false,
+                        testResult = TestResult.Failure(result.message)
+                    )
+                }
             }
         }
     }
