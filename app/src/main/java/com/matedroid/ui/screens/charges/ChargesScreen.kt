@@ -136,6 +136,7 @@ fun ChargesScreen(
                 ChargesContent(
                     charges = uiState.charges,
                     summary = uiState.summary,
+                    currencySymbol = uiState.currencySymbol,
                     selectedFilter = selectedFilter,
                     onFilterSelected = { applyDateFilter(it) }
                 )
@@ -149,6 +150,7 @@ fun ChargesScreen(
 private fun ChargesContent(
     charges: List<ChargeData>,
     summary: ChargesSummary,
+    currencySymbol: String,
     selectedFilter: DateFilter,
     onFilterSelected: (DateFilter) -> Unit
 ) {
@@ -165,7 +167,7 @@ private fun ChargesContent(
         }
 
         item {
-            SummaryCard(summary = summary)
+            SummaryCard(summary = summary, currencySymbol = currencySymbol)
         }
 
         item {
@@ -201,7 +203,7 @@ private fun ChargesContent(
             }
         } else {
             items(charges, key = { it.chargeId }) { charge ->
-                ChargeItem(charge = charge)
+                ChargeItem(charge = charge, currencySymbol = currencySymbol)
             }
         }
     }
@@ -231,7 +233,7 @@ private fun DateFilterChips(
 }
 
 @Composable
-private fun SummaryCard(summary: ChargesSummary) {
+private fun SummaryCard(summary: ChargesSummary, currencySymbol: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -275,12 +277,12 @@ private fun SummaryCard(summary: ChargesSummary) {
                 SummaryItem(
                     icon = Icons.Default.Paid,
                     label = "Total Cost",
-                    value = "%.2f".format(summary.totalCost)
+                    value = "$currencySymbol%.2f".format(summary.totalCost)
                 )
                 SummaryItem(
                     icon = Icons.Default.Paid,
                     label = "Avg Cost/Session",
-                    value = "%.2f".format(summary.avgCostPerCharge)
+                    value = "$currencySymbol%.2f".format(summary.avgCostPerCharge)
                 )
             }
         }
@@ -321,7 +323,7 @@ private fun SummaryItem(
 }
 
 @Composable
-private fun ChargeItem(charge: ChargeData) {
+private fun ChargeItem(charge: ChargeData, currencySymbol: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -400,7 +402,7 @@ private fun ChargeItem(charge: ChargeData) {
                 // Cost
                 ChargeStatCard(
                     icon = Icons.Default.Paid,
-                    value = "%.2f".format(charge.cost ?: 0.0),
+                    value = "$currencySymbol%.2f".format(charge.cost ?: 0.0),
                     unit = "",
                     label = "Cost",
                     modifier = Modifier.weight(1f)

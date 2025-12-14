@@ -1,6 +1,7 @@
 package com.matedroid.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
@@ -24,6 +26,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +55,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.matedroid.data.model.Currency
 import com.matedroid.ui.theme.MateDroidTheme
 import com.matedroid.ui.theme.StatusWarning
 import com.matedroid.ui.theme.StatusError
@@ -89,6 +94,7 @@ fun SettingsScreen(
                 onServerUrlChange = viewModel::updateServerUrl,
                 onApiTokenChange = viewModel::updateApiToken,
                 onAcceptInvalidCertsChange = viewModel::updateAcceptInvalidCerts,
+                onCurrencyChange = viewModel::updateCurrency,
                 onTestConnection = viewModel::testConnection,
                 onSave = { viewModel.saveSettings(onNavigateToDashboard) }
             )
@@ -116,10 +122,12 @@ private fun SettingsContent(
     onServerUrlChange: (String) -> Unit,
     onApiTokenChange: (String) -> Unit,
     onAcceptInvalidCertsChange: (Boolean) -> Unit,
+    onCurrencyChange: (String) -> Unit,
     onTestConnection: () -> Unit,
     onSave: () -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    var currencyDropdownExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -258,6 +266,54 @@ private fun SettingsContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Currency selection
+        Text(
+            text = "Display Settings",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val selectedCurrency = Currency.findByCode(uiState.currencyCode)
+
+        Box {
+            OutlinedTextField(
+                value = "${selectedCurrency.symbol} ${selectedCurrency.code} - ${selectedCurrency.name}",
+                onValueChange = {},
+                label = { Text("Currency for costs") },
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { currencyDropdownExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Select currency"
+                        )
+                    }
+                }
+            )
+
+            DropdownMenu(
+                expanded = currencyDropdownExpanded,
+                onDismissRequest = { currencyDropdownExpanded = false },
+                modifier = Modifier.fillMaxWidth(0.9f)
+            ) {
+                Currency.ALL.forEach { currency ->
+                    DropdownMenuItem(
+                        text = {
+                            Text("${currency.symbol} ${currency.code} - ${currency.name}")
+                        },
+                        onClick = {
+                            onCurrencyChange(currency.code)
+                            currencyDropdownExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Test result card
         uiState.testResult?.let { result ->
             TestResultCard(result = result)
@@ -356,6 +412,7 @@ private fun SettingsScreenPreview() {
             onServerUrlChange = {},
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
+            onCurrencyChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -375,6 +432,7 @@ private fun SettingsScreenWithResultPreview() {
             onServerUrlChange = {},
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
+            onCurrencyChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -394,6 +452,7 @@ private fun SettingsScreenWithWarningPreview() {
             onServerUrlChange = {},
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
+            onCurrencyChange = {},
             onTestConnection = {},
             onSave = {}
         )

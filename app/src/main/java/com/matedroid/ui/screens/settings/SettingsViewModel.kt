@@ -17,6 +17,7 @@ data class SettingsUiState(
     val serverUrl: String = "",
     val apiToken: String = "",
     val acceptInvalidCerts: Boolean = false,
+    val currencyCode: String = "EUR",
     val isLoading: Boolean = true,
     val isTesting: Boolean = false,
     val isSaving: Boolean = false,
@@ -49,6 +50,7 @@ class SettingsViewModel @Inject constructor(
                 serverUrl = settings.serverUrl,
                 apiToken = settings.apiToken,
                 acceptInvalidCerts = settings.acceptInvalidCerts,
+                currencyCode = settings.currencyCode,
                 isLoading = false
             )
         }
@@ -76,6 +78,13 @@ class SettingsViewModel @Inject constructor(
             testResult = null,
             error = null
         )
+    }
+
+    fun updateCurrency(currencyCode: String) {
+        _uiState.value = _uiState.value.copy(currencyCode = currencyCode)
+        viewModelScope.launch {
+            settingsDataStore.saveCurrency(currencyCode)
+        }
     }
 
     fun testConnection() {
@@ -133,7 +142,8 @@ class SettingsViewModel @Inject constructor(
                 settingsDataStore.saveSettings(
                     serverUrl = url,
                     apiToken = _uiState.value.apiToken,
-                    acceptInvalidCerts = _uiState.value.acceptInvalidCerts
+                    acceptInvalidCerts = _uiState.value.acceptInvalidCerts,
+                    currencyCode = _uiState.value.currencyCode
                 )
 
                 _uiState.value = _uiState.value.copy(isSaving = false)

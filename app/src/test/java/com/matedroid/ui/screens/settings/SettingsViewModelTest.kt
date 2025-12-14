@@ -148,7 +148,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `saveSettings calls datastore and triggers callback`() = runTest {
-        coEvery { settingsDataStore.saveSettings(any(), any(), any()) } returns Unit
+        coEvery { settingsDataStore.saveSettings(any(), any(), any(), any()) } returns Unit
 
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -161,7 +161,7 @@ class SettingsViewModelTest {
         viewModel.saveSettings { callbackCalled = true }
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { settingsDataStore.saveSettings("https://saved.com", "saved-token", true) }
+        coVerify { settingsDataStore.saveSettings("https://saved.com", "saved-token", true, "EUR") }
         assertTrue(callbackCalled)
     }
 
