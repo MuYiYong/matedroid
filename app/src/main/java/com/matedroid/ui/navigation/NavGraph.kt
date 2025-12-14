@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.matedroid.ui.screens.charges.ChargesScreen
 import com.matedroid.ui.screens.dashboard.DashboardScreen
+import com.matedroid.ui.screens.drives.DrivesScreen
 import com.matedroid.ui.screens.settings.SettingsScreen
 
 sealed class Screen(val route: String) {
@@ -22,9 +23,11 @@ sealed class Screen(val route: String) {
     data object ChargeDetail : Screen("charges/{carId}/detail/{chargeId}") {
         fun createRoute(carId: Int, chargeId: Int) = "charges/$carId/detail/$chargeId"
     }
-    data object Drives : Screen("drives")
-    data object DriveDetail : Screen("drives/{driveId}") {
-        fun createRoute(driveId: Int) = "drives/$driveId"
+    data object Drives : Screen("drives/{carId}") {
+        fun createRoute(carId: Int) = "drives/$carId"
+    }
+    data object DriveDetail : Screen("drives/{carId}/detail/{driveId}") {
+        fun createRoute(carId: Int, driveId: Int) = "drives/$carId/detail/$driveId"
     }
     data object Battery : Screen("battery")
     data object Updates : Screen("updates")
@@ -62,6 +65,9 @@ fun NavGraph(
                 },
                 onNavigateToCharges = { carId ->
                     navController.navigate(Screen.Charges.createRoute(carId))
+                },
+                onNavigateToDrives = { carId ->
+                    navController.navigate(Screen.Drives.createRoute(carId))
                 }
             )
         }
@@ -74,6 +80,19 @@ fun NavGraph(
         ) { backStackEntry ->
             val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
             ChargesScreen(
+                carId = carId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Drives.route,
+            arguments = listOf(
+                navArgument("carId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
+            DrivesScreen(
                 carId = carId,
                 onNavigateBack = { navController.popBackStack() }
             )

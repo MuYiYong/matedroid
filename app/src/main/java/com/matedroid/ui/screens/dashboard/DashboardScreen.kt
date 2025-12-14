@@ -69,6 +69,7 @@ import kotlin.math.roundToInt
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToCharges: (carId: Int) -> Unit = {},
+    onNavigateToDrives: (carId: Int) -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -110,6 +111,9 @@ fun DashboardScreen(
                         status = uiState.carStatus!!,
                         onNavigateToCharges = {
                             uiState.selectedCarId?.let { onNavigateToCharges(it) }
+                        },
+                        onNavigateToDrives = {
+                            uiState.selectedCarId?.let { onNavigateToDrives(it) }
                         }
                     )
                 }
@@ -189,7 +193,8 @@ private fun ErrorContent(message: String) {
 @Composable
 private fun DashboardContent(
     status: CarStatus,
-    onNavigateToCharges: () -> Unit = {}
+    onNavigateToCharges: () -> Unit = {},
+    onNavigateToDrives: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -223,6 +228,13 @@ private fun DashboardContent(
             description = "View all charging sessions",
             icon = Icons.Filled.BatteryChargingFull,
             onClick = onNavigateToCharges
+        )
+
+        NavigationCard(
+            title = "Drive History",
+            description = "View all trips and driving stats",
+            icon = Icons.Filled.DirectionsCar,
+            onClick = onNavigateToDrives
         )
     }
 }
