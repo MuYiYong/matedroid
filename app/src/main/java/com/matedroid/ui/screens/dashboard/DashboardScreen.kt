@@ -46,7 +46,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -199,28 +198,11 @@ private fun DashboardContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Compact status indicators (right-aligned)
+        StatusIndicatorsRow(status)
+
         // Battery Section
         BatteryCard(status)
-
-        // Status Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatusCard(
-                title = "State",
-                value = status.state?.replaceFirstChar { it.uppercase() } ?: "Unknown",
-                icon = Icons.Filled.Power,
-                modifier = Modifier.weight(1f)
-            )
-            StatusCard(
-                title = "Locked",
-                value = if (status.locked == true) "Yes" else "No",
-                icon = if (status.locked == true) Icons.Filled.Lock else Icons.Filled.LockOpen,
-                valueColor = if (status.locked == true) StatusSuccess else StatusWarning,
-                modifier = Modifier.weight(1f)
-            )
-        }
 
         // Charging Section (if plugged in)
         if (status.pluggedIn == true) {
@@ -244,6 +226,46 @@ private fun DashboardContent(
             description = "View all charging sessions",
             icon = Icons.Filled.BatteryChargingFull,
             onClick = onNavigateToCharges
+        )
+    }
+}
+
+@Composable
+private fun StatusIndicatorsRow(status: CarStatus) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // State indicator
+        Icon(
+            imageVector = Icons.Filled.Power,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = status.state?.replaceFirstChar { it.uppercase() } ?: "Unknown",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Locked indicator
+        val isLocked = status.locked == true
+        Icon(
+            imageVector = if (isLocked) Icons.Filled.Lock else Icons.Filled.LockOpen,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = if (isLocked) StatusSuccess else StatusWarning
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = if (isLocked) "Locked" else "Unlocked",
+            style = MaterialTheme.typography.labelMedium,
+            color = if (isLocked) StatusSuccess else StatusWarning
         )
     }
 }
@@ -515,41 +537,6 @@ private fun VehicleInfoCard(status: CarStatus) {
                     icon = Icons.Filled.Settings
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun StatusCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Card(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                color = valueColor
-            )
         }
     }
 }
