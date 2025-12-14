@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocationOn
@@ -26,6 +28,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +44,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,8 +54,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.data.api.models.ChargeData
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+enum class DateFilter(val label: String, val days: Long?) {
+    LAST_7_DAYS("Last 7 days", 7),
+    LAST_30_DAYS("Last 30 days", 30),
+    LAST_90_DAYS("Last 90 days", 90),
+    LAST_YEAR("Last year", 365),
+    ALL_TIME("All time", null)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +75,7 @@ fun ChargesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var selectedFilter by remember { mutableStateOf(DateFilter.ALL_TIME) }
 
     LaunchedEffect(carId) {
         viewModel.setCarId(carId)
@@ -69,6 +85,17 @@ fun ChargesScreen(
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
             viewModel.clearError()
+        }
+    }
+
+    fun applyDateFilter(filter: DateFilter) {
+        selectedFilter = filter
+        if (filter.days != null) {
+            val endDate = LocalDate.now()
+            val startDate = endDate.minusDays(filter.days)
+            viewModel.setDateFilter(startDate, endDate)
+        } else {
+            viewModel.clearDateFilter()
         }
     }
 
@@ -108,23 +135,35 @@ fun ChargesScreen(
             } else {
                 ChargesContent(
                     charges = uiState.charges,
-                    summary = uiState.summary
+                    summary = uiState.summary,
+                    selectedFilter = selectedFilter,
+                    onFilterSelected = { applyDateFilter(it) }
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChargesContent(
     charges: List<ChargeData>,
-    summary: ChargesSummary
+    summary: ChargesSummary,
+    selectedFilter: DateFilter,
+    onFilterSelected: (DateFilter) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            DateFilterChips(
+                selectedFilter = selectedFilter,
+                onFilterSelected = onFilterSelected
+            )
+        }
+
         item {
             SummaryCard(summary = summary)
         }
@@ -153,7 +192,7 @@ private fun ChargesContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No charges found",
+                            text = "No charges found for selected period",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -164,6 +203,29 @@ private fun ChargesContent(
             items(charges, key = { it.chargeId }) { charge ->
                 ChargeItem(charge = charge)
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateFilterChips(
+    selectedFilter: DateFilter,
+    onFilterSelected: (DateFilter) -> Unit
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(DateFilter.entries.toList()) { filter ->
+            FilterChip(
+                selected = filter == selectedFilter,
+                onClick = { onFilterSelected(filter) },
+                label = { Text(filter.label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
         }
     }
 }

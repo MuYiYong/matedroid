@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Charges screen with charging history
   - Summary statistics (total sessions, energy, cost)
   - List of all charging sessions with details
+  - Date filtering (Last 7/30/90 days, Last year, All time)
   - Navigation from Dashboard to Charges screen
 - TeslamateApi Retrofit client with all endpoints
 - Repository layer with ApiResult sealed class for error handling
