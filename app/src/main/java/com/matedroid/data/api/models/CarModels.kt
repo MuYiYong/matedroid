@@ -63,6 +63,8 @@ data class CarStatus(
     val idealBatteryRangeKm: Double? get() = batteryDetails?.idealBatteryRange
 
     val pluggedIn: Boolean? get() = chargingDetails?.pluggedIn
+    val chargingState: String? get() = chargingDetails?.chargingState
+    val isCharging: Boolean get() = chargingState?.lowercase() == "charging"
     val chargeEnergyAdded: Double? get() = chargingDetails?.chargeEnergyAdded
     val chargeLimitSoc: Int? get() = chargingDetails?.chargeLimitSoc
     val chargerPower: Int? get() = chargingDetails?.chargerPower
