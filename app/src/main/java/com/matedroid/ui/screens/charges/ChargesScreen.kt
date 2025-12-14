@@ -325,128 +325,152 @@ private fun ChargeItem(charge: ChargeData) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Location and date header
-            Row(
+            // Header card with location and date
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = charge.address ?: "Unknown location",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = charge.address ?: "Unknown location",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        charge.startDate?.let { dateStr ->
+                            Text(
+                                text = formatDate(dateStr),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Date
-            charge.startDate?.let { dateStr ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = formatDate(dateStr),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Stats row
+            // Stats row with individual cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Energy added
-                ChargeStatItem(
+                ChargeStatCard(
                     icon = Icons.Default.BatteryChargingFull,
-                    value = "%.1f kWh".format(charge.chargeEnergyAdded ?: 0.0),
-                    label = "Added"
+                    value = "%.1f".format(charge.chargeEnergyAdded ?: 0.0),
+                    unit = "kWh",
+                    label = "Added",
+                    modifier = Modifier.weight(1f)
                 )
 
                 // Duration
-                ChargeStatItem(
+                ChargeStatCard(
                     icon = Icons.Default.Schedule,
-                    value = charge.durationStr ?: "${charge.durationMin ?: 0} min",
-                    label = "Duration"
+                    value = charge.durationStr ?: "${charge.durationMin ?: 0}m",
+                    unit = "",
+                    label = "Duration",
+                    modifier = Modifier.weight(1f)
                 )
+            }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 // Cost
-                ChargeStatItem(
+                ChargeStatCard(
                     icon = Icons.Default.Paid,
                     value = "%.2f".format(charge.cost ?: 0.0),
-                    label = "Cost"
+                    unit = "",
+                    label = "Cost",
+                    modifier = Modifier.weight(1f)
                 )
 
                 // Battery levels
                 val startLevel = charge.startBatteryLevel
                 val endLevel = charge.endBatteryLevel
-                if (startLevel != null && endLevel != null) {
-                    ChargeStatItem(
-                        icon = Icons.Default.ElectricBolt,
-                        value = "$startLevel% -> $endLevel%",
-                        label = "Battery"
-                    )
-                }
+                ChargeStatCard(
+                    icon = Icons.Default.ElectricBolt,
+                    value = if (startLevel != null && endLevel != null) "$startLevel% → $endLevel%" else "--",
+                    unit = "",
+                    label = "Battery",
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ChargeStatItem(
+private fun ChargeStatCard(
     icon: ImageVector,
     value: String,
-    label: String
+    unit: String,
+    label: String,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                if (unit.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = unit,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
