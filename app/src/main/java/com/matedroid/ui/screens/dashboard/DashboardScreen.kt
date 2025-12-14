@@ -234,39 +234,75 @@ private fun DashboardContent(
 private fun StatusIndicatorsRow(status: CarStatus) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // State indicator
-        Icon(
-            imageVector = Icons.Filled.Power,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = status.state?.replaceFirstChar { it.uppercase() } ?: "Unknown",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        // Left side: State and Lock
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // State indicator
+            Icon(
+                imageVector = Icons.Filled.Power,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = status.state?.replaceFirstChar { it.uppercase() } ?: "Unknown",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-        // Locked indicator
-        val isLocked = status.locked == true
-        Icon(
-            imageVector = if (isLocked) Icons.Filled.Lock else Icons.Filled.LockOpen,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = if (isLocked) StatusSuccess else StatusWarning
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = if (isLocked) "Locked" else "Unlocked",
-            style = MaterialTheme.typography.labelMedium,
-            color = if (isLocked) StatusSuccess else StatusWarning
-        )
+            // Locked indicator
+            val isLocked = status.locked == true
+            Icon(
+                imageVector = if (isLocked) Icons.Filled.Lock else Icons.Filled.LockOpen,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (isLocked) StatusSuccess else StatusWarning
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = if (isLocked) "Locked" else "Unlocked",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isLocked) StatusSuccess else StatusWarning
+            )
+        }
+
+        // Right side: Temperatures
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Inside temp
+            Icon(
+                imageVector = Icons.Filled.Thermostat,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = status.insideTemp?.let { "%.0f°".format(it) } ?: "--",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Outside temp
+            Icon(
+                imageVector = Icons.Filled.Thermostat,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = status.outsideTemp?.let { "%.0f°".format(it) } ?: "--",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 
