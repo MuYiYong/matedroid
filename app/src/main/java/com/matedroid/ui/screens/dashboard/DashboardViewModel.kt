@@ -3,6 +3,7 @@ package com.matedroid.ui.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.CarData
+import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarStatus
 import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.ApiResult
@@ -26,8 +27,17 @@ data class DashboardUiState(
     val units: Units? = null,
     val error: String? = null
 ) {
+    private val selectedCar: CarData?
+        get() = cars.find { it.carId == selectedCarId }
+
     val selectedCarEfficiency: Double?
-        get() = cars.find { it.carId == selectedCarId }?.carDetails?.efficiency
+        get() = selectedCar?.carDetails?.efficiency
+
+    val selectedCarModel: String?
+        get() = selectedCar?.carDetails?.model
+
+    val selectedCarExterior: CarExterior?
+        get() = selectedCar?.carExterior
 }
 
 @HiltViewModel

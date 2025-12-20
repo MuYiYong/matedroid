@@ -17,11 +17,19 @@ data class CarsData(
 data class CarData(
     @Json(name = "car_id") val carId: Int,
     @Json(name = "name") val name: String? = null,
-    @Json(name = "car_details") val carDetails: CarDetails? = null
+    @Json(name = "car_details") val carDetails: CarDetails? = null,
+    @Json(name = "car_exterior") val carExterior: CarExterior? = null
 ) {
     val displayName: String?
         get() = name
 }
+
+@JsonClass(generateAdapter = true)
+data class CarExterior(
+    @Json(name = "exterior_color") val exteriorColor: String? = null,
+    @Json(name = "spoiler_type") val spoilerType: String? = null,
+    @Json(name = "wheel_type") val wheelType: String? = null
+)
 
 @JsonClass(generateAdapter = true)
 data class CarDetails(

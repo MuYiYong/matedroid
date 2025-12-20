@@ -1,7 +1,9 @@
 package com.matedroid.ui.screens.dashboard
 
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +54,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,8 +73,10 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import com.matedroid.data.api.models.BatteryDetails
+import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarGeodata
 import com.matedroid.data.api.models.CarStatus
+import com.matedroid.domain.model.CarImageResolver
 import com.matedroid.data.api.models.CarStatusDetails
 import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.UnitFormatter
@@ -132,6 +138,8 @@ fun DashboardScreen(
                     DashboardContent(
                         status = uiState.carStatus!!,
                         units = uiState.units,
+                        carModel = uiState.selectedCarModel,
+                        carExterior = uiState.selectedCarExterior,
                         onNavigateToCharges = {
                             uiState.selectedCarId?.let { onNavigateToCharges(it) }
                         },
@@ -229,6 +237,8 @@ private fun ErrorContent(message: String) {
 private fun DashboardContent(
     status: CarStatus,
     units: Units? = null,
+    carModel: String? = null,
+    carExterior: CarExterior? = null,
     onNavigateToCharges: () -> Unit = {},
     onNavigateToDrives: () -> Unit = {},
     onNavigateToBattery: () -> Unit = {},
@@ -245,6 +255,12 @@ private fun DashboardContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Car image
+            CarImageCard(
+                carModel = carModel,
+                carExterior = carExterior
+            )
+
             // Compact status indicators (right-aligned)
             StatusIndicatorsRow(status, units)
 
@@ -268,6 +284,56 @@ private fun DashboardContent(
             onNavigateToMileage = onNavigateToMileage,
             modifier = Modifier.padding(16.dp)
         )
+    }
+}
+
+@Composable
+private fun CarImageCard(
+    carModel: String?,
+    carExterior: CarExterior?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val assetPath = remember(carModel, carExterior) {
+        CarImageResolver.getAssetPath(
+            model = carModel,
+            exteriorColor = carExterior?.exteriorColor,
+            wheelType = carExterior?.wheelType
+        )
+    }
+
+    val bitmap = remember(assetPath) {
+        try {
+            context.assets.open(assetPath).use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            }
+        } catch (e: Exception) {
+            // Try fallback to default
+            try {
+                val fallbackPath = CarImageResolver.getDefaultAssetPath(carModel)
+                context.assets.open(fallbackPath).use { inputStream ->
+                    BitmapFactory.decodeStream(inputStream)
+                }
+            } catch (e2: Exception) {
+                null
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Car image",
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 
