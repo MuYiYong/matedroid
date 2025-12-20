@@ -198,35 +198,41 @@ private fun DashboardContent(
     onNavigateToDrives: () -> Unit = {}
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Compact status indicators (right-aligned)
-        StatusIndicatorsRow(status)
+        // Scrollable content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Compact status indicators (right-aligned)
+            StatusIndicatorsRow(status)
 
-        // Battery Section
-        BatteryCard(status)
+            // Battery Section
+            BatteryCard(status)
 
-        // Charging Section (if plugged in)
-        if (status.pluggedIn == true) {
-            ChargingCard(status)
+            // Charging Section (if plugged in)
+            if (status.pluggedIn == true) {
+                ChargingCard(status)
+            }
+
+            // Location Section
+            status.geofence?.let { geofence ->
+                LocationCard(geofence = geofence, status = status)
+            }
+
+            // Vehicle Info Section
+            VehicleInfoCard(status)
         }
 
-        // Location Section
-        status.geofence?.let { geofence ->
-            LocationCard(geofence = geofence, status = status)
-        }
-
-        // Vehicle Info Section
-        VehicleInfoCard(status)
-
-        // Quick Links Grid
+        // Fixed bottom quick links
         QuickLinksRow(
             onNavigateToCharges = onNavigateToCharges,
-            onNavigateToDrives = onNavigateToDrives
+            onNavigateToDrives = onNavigateToDrives,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
@@ -593,10 +599,11 @@ private fun formatHoursMinutes(hours: Double): String {
 @Composable
 private fun QuickLinksRow(
     onNavigateToCharges: () -> Unit,
-    onNavigateToDrives: () -> Unit
+    onNavigateToDrives: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         QuickLinkItem(
