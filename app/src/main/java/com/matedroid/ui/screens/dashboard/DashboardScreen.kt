@@ -28,8 +28,10 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Power
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
@@ -328,7 +330,7 @@ private fun CarImage(
 
     if (bitmap != null) {
         Box(
-            modifier = modifier.height(200.dp),
+            modifier = modifier.height(160.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -350,18 +352,30 @@ private fun StatusIndicatorsRow(status: CarStatus, units: Units?) {
     ) {
         // Left side: State and Lock
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // State indicator
+            // State indicator - icon changes based on state
+            val stateIcon = when {
+                status.isCharging || status.pluggedIn == true -> Icons.Filled.PowerSettingsNew
+                status.state?.lowercase() == "online" -> Icons.Filled.Circle
+                status.state?.lowercase() in listOf("asleep", "offline", "suspended") -> Icons.Filled.Bedtime
+                else -> Icons.Filled.Circle
+            }
+            val stateColor = when {
+                status.isCharging -> StatusSuccess
+                status.pluggedIn == true -> MaterialTheme.colorScheme.primary
+                status.state?.lowercase() == "online" -> StatusSuccess
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
             Icon(
-                imageVector = Icons.Filled.Power,
+                imageVector = stateIcon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier.size(if (stateIcon == Icons.Filled.Circle) 10.dp else 16.dp),
+                tint = stateColor
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = status.state?.replaceFirstChar { it.uppercase() } ?: "Unknown",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = stateColor
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -431,6 +445,7 @@ private fun BatteryCard(
         batteryLevel < 40 -> StatusWarning
         else -> MaterialTheme.colorScheme.onPrimaryContainer
     }
+    val chargeLimit = status.chargeLimitSoc ?: 100
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -441,9 +456,9 @@ private fun BatteryCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
         ) {
-            // Car image at the top
+            // Car image at the top (reduced padding above)
             CarImage(
                 carModel = carModel,
                 carTrimBadging = carTrimBadging,
@@ -451,9 +466,7 @@ private fun BatteryCard(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Battery info row
+            // Battery info row - closer to car image
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -510,21 +523,28 @@ private fun BatteryCard(
                 }
             }
 
-            // Charging progress bar - only shown when charging
-            if (status.isCharging) {
-                val chargeLimit = status.chargeLimitSoc ?: 100
-                Spacer(modifier = Modifier.height(12.dp))
-                ChargingProgressBar(
-                    currentLevel = batteryLevel,
-                    targetLevel = chargeLimit,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            // Charging section - always reserve space for consistent card height
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Progress bar - always shown but different appearance when not charging
+            ChargingProgressBar(
+                currentLevel = batteryLevel,
+                targetLevel = chargeLimit,
+                isCharging = status.isCharging,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Charging info row - content visible only when charging, but space always reserved
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (status.isCharging) {
                     Text(
                         text = "${status.chargerPower ?: 0} kW",
                         style = MaterialTheme.typography.labelSmall,
@@ -551,6 +571,7 @@ private fun BatteryCard(
                         )
                     }
                 }
+                // When not charging, row is empty but maintains height
             }
         }
     }
@@ -560,12 +581,15 @@ private fun BatteryCard(
 private fun ChargingProgressBar(
     currentLevel: Int,
     targetLevel: Int,
+    isCharging: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val currentFraction = currentLevel / 100f
     val targetFraction = targetLevel / 100f
     val solidGreen = StatusSuccess
     val dimmedGreen = StatusSuccess.copy(alpha = 0.3f)
+    val batteryBlue = MaterialTheme.colorScheme.primary
+    val dimmedBlue = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
     val backgroundColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)
 
     Canvas(
@@ -582,23 +606,43 @@ private fun ChargingProgressBar(
             size = size
         )
 
-        // Dimmed green for target area (from current to target)
-        if (targetFraction > currentFraction) {
-            drawRect(
-                color = dimmedGreen,
-                topLeft = androidx.compose.ui.geometry.Offset(width * currentFraction, 0f),
-                size = androidx.compose.ui.geometry.Size(
-                    width * (targetFraction - currentFraction),
-                    height
+        if (isCharging) {
+            // Charging: show green with target area
+            // Dimmed green for target area (from current to target)
+            if (targetFraction > currentFraction) {
+                drawRect(
+                    color = dimmedGreen,
+                    topLeft = androidx.compose.ui.geometry.Offset(width * currentFraction, 0f),
+                    size = androidx.compose.ui.geometry.Size(
+                        width * (targetFraction - currentFraction),
+                        height
+                    )
                 )
+            }
+            // Solid green for current charge level
+            drawRect(
+                color = solidGreen,
+                size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
+            )
+        } else {
+            // Not charging: show blue with limit marker
+            // Dimmed blue for limit area
+            if (targetFraction > currentFraction) {
+                drawRect(
+                    color = dimmedBlue,
+                    topLeft = androidx.compose.ui.geometry.Offset(width * currentFraction, 0f),
+                    size = androidx.compose.ui.geometry.Size(
+                        width * (targetFraction - currentFraction),
+                        height
+                    )
+                )
+            }
+            // Solid blue for current charge level
+            drawRect(
+                color = batteryBlue,
+                size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
             )
         }
-
-        // Solid green for current charge level
-        drawRect(
-            color = solidGreen,
-            size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
-        )
     }
 }
 
