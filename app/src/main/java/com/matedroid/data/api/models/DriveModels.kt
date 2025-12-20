@@ -56,7 +56,7 @@ data class DriveData(
 data class DriveOdometerDetails(
     @Json(name = "odometer_start") val odometerStart: Double? = null,
     @Json(name = "odometer_end") val odometerEnd: Double? = null,
-    @Json(name = "distance") val distance: Double? = null
+    @Json(name = "odometer_distance") val distance: Double? = null
 )
 
 @JsonClass(generateAdapter = true)

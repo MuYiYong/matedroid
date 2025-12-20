@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
@@ -61,8 +61,6 @@ class MileageViewModel @Inject constructor(
     val uiState: StateFlow<MileageUiState> = _uiState.asStateFlow()
 
     private var carId: Int? = null
-
-    private val dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
     fun setCarId(id: Int) {
         if (carId != id) {
@@ -248,10 +246,11 @@ class MileageViewModel @Inject constructor(
     private fun parseDateTime(dateStr: String?): LocalDateTime? {
         if (dateStr == null) return null
         return try {
-            LocalDateTime.parse(dateStr, dateTimeFormatter)
+            // Parse as OffsetDateTime (handles timezone like +01:00)
+            OffsetDateTime.parse(dateStr).toLocalDateTime()
         } catch (e: DateTimeParseException) {
             try {
-                // Try alternative formats
+                // Fallback: try parsing as LocalDateTime directly
                 LocalDateTime.parse(dateStr.replace("Z", ""))
             } catch (e2: Exception) {
                 null
