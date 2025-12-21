@@ -34,6 +34,12 @@ data class DashboardUiState(
     private val selectedCar: CarData?
         get() = cars.find { it.carId == selectedCarId }
 
+    val hasMultipleCars: Boolean
+        get() = cars.size > 1
+
+    val selectedCarName: String?
+        get() = selectedCar?.displayName ?: carStatus?.displayName
+
     val selectedCarEfficiency: Double?
         get() = selectedCar?.carDetails?.efficiency
 
@@ -93,7 +99,15 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun selectCar(carId: Int) {
-        _uiState.value = _uiState.value.copy(selectedCarId = carId)
+        // Reset state when switching cars
+        lastGeocodedLocation = null
+        _uiState.value = _uiState.value.copy(
+            selectedCarId = carId,
+            carStatus = null,
+            resolvedAddress = null,
+            totalCharges = null,
+            totalDrives = null
+        )
         loadCarStatus(carId)
     }
 

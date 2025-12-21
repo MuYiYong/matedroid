@@ -43,9 +43,13 @@ import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,7 +70,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
@@ -118,6 +124,7 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showCarSelector by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -126,11 +133,79 @@ fun DashboardScreen(
         }
     }
 
+    // Car selector dialog
+    if (showCarSelector && uiState.hasMultipleCars) {
+        AlertDialog(
+            onDismissRequest = { showCarSelector = false },
+            title = { Text("Select Vehicle") },
+            text = {
+                Column {
+                    uiState.cars.forEach { car ->
+                        val isSelected = car.carId == uiState.selectedCarId
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.selectCar(car.carId)
+                                    showCarSelector = false
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DirectionsCar,
+                                contentDescription = null,
+                                tint = if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = car.displayName ?: "Car ${car.carId}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCarSelector = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(uiState.carStatus?.displayName ?: "MateDroid")
+                    if (uiState.hasMultipleCars) {
+                        Row(
+                            modifier = Modifier.clickable { showCarSelector = true },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(uiState.selectedCarName ?: "MateDroid")
+                            Icon(
+                                imageVector = Icons.Filled.ArrowDropDown,
+                                contentDescription = "Select car",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    } else {
+                        Text(uiState.selectedCarName ?: "MateDroid")
+                    }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
