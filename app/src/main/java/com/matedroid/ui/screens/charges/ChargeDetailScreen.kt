@@ -134,6 +134,7 @@ fun ChargeDetailScreen(
                     detail = detail,
                     stats = uiState.stats,
                     units = uiState.units,
+                    currencySymbol = uiState.currencySymbol,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -146,6 +147,7 @@ private fun ChargeDetailContent(
     detail: ChargeDetail,
     stats: ChargeDetailStats?,
     units: Units?,
+    currencySymbol: String,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -158,7 +160,7 @@ private fun ChargeDetailContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Location header card
-        LocationHeaderCard(detail = detail)
+        LocationHeaderCard(detail = detail, currencySymbol = currencySymbol)
 
         // Map showing charge location
         if (detail.latitude != null && detail.longitude != null) {
@@ -270,7 +272,7 @@ private fun ChargeDetailContent(
 }
 
 @Composable
-private fun LocationHeaderCard(detail: ChargeDetail) {
+private fun LocationHeaderCard(detail: ChargeDetail, currencySymbol: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -382,7 +384,7 @@ private fun LocationHeaderCard(detail: ChargeDetail) {
                                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                     )
                                     Text(
-                                        text = "%.2f".format(cost),
+                                        text = "$currencySymbol%.2f".format(cost),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer

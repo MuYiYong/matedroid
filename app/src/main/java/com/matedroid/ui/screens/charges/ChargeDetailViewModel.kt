@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.ChargeDetail
 import com.matedroid.data.api.models.Units
+import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.model.Currency
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,7 +22,8 @@ data class ChargeDetailUiState(
     val error: String? = null,
     val chargeDetail: ChargeDetail? = null,
     val units: Units? = null,
-    val stats: ChargeDetailStats? = null
+    val stats: ChargeDetailStats? = null,
+    val currencySymbol: String = "€"
 )
 
 data class ChargeDetailStats(
@@ -47,7 +51,8 @@ data class ChargeDetailStats(
 
 @HiltViewModel
 class ChargeDetailViewModel @Inject constructor(
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChargeDetailUiState())
@@ -55,6 +60,18 @@ class ChargeDetailViewModel @Inject constructor(
 
     private var carId: Int? = null
     private var chargeId: Int? = null
+
+    init {
+        loadCurrency()
+    }
+
+    private fun loadCurrency() {
+        viewModelScope.launch {
+            val settings = settingsDataStore.settings.first()
+            val currency = Currency.findByCode(settings.currencyCode)
+            _uiState.update { it.copy(currencySymbol = currency.symbol) }
+        }
+    }
 
     fun loadChargeDetail(carId: Int, chargeId: Int) {
         if (this.carId == carId && this.chargeId == chargeId && _uiState.value.chargeDetail != null) {
