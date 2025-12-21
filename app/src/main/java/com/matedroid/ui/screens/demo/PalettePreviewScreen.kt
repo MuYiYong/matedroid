@@ -19,7 +19,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Circle
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,7 @@ import com.matedroid.domain.model.CarImageResolver
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
+import com.matedroid.ui.theme.StatusWarning
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +69,7 @@ fun PalettePreviewScreen(
                 title = { Text("Color Palette Preview") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -86,40 +89,93 @@ fun PalettePreviewScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            // White car
+            // Section: Charging cards
+            Text(
+                text = "Charging State",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // White car - Charging
             PreviewBatteryCard(
                 carColor = "White",
                 exteriorColor = "White",
                 model = "3",
                 wheelType = "Pinwheel18",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
-            // Black car
-            PreviewBatteryCard(
-                carColor = "Black",
-                exteriorColor = "SolidBlack",
-                model = "3",
-                wheelType = "Pinwheel18",
-                isDarkTheme = isDark
-            )
-
-            // Midnight Silver
+            // Midnight Silver - Charging
             PreviewBatteryCard(
                 carColor = "Midnight Silver",
                 exteriorColor = "MidnightSilver",
                 model = "3",
                 wheelType = "Pinwheel18",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
-            // Red
+            // Section: Not Charging cards
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Not Charging State",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // White car - Not charging
             PreviewBatteryCard(
-                carColor = "Red Multi-Coat",
+                carColor = "White (Not Charging)",
+                exteriorColor = "White",
+                model = "3",
+                wheelType = "Pinwheel18",
+                isDarkTheme = isDark,
+                isCharging = false
+            )
+
+            // Black car - Not charging
+            PreviewBatteryCard(
+                carColor = "Black (Not Charging)",
+                exteriorColor = "SolidBlack",
+                model = "3",
+                wheelType = "Pinwheel18",
+                isDarkTheme = isDark,
+                isCharging = false
+            )
+
+            // Midnight Silver - Not charging
+            PreviewBatteryCard(
+                carColor = "Midnight Silver (Not Charging)",
+                exteriorColor = "MidnightSilver",
+                model = "3",
+                wheelType = "Pinwheel18",
+                isDarkTheme = isDark,
+                isCharging = false
+            )
+
+            // Red - Not charging
+            PreviewBatteryCard(
+                carColor = "Red Multi-Coat (Not Charging)",
                 exteriorColor = "RedMulticoat",
                 model = "3",
                 wheelType = "Pinwheel18",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = false
+            )
+
+            // Section: Other models (Charging)
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Other Models (Charging)",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
             )
 
             // Model Y Legacy - Pearl White
@@ -128,7 +184,8 @@ fun PalettePreviewScreen(
                 exteriorColor = "White",
                 model = "Y",
                 wheelType = "Gemini19",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             // Deep Blue (Model Y Legacy)
@@ -137,7 +194,8 @@ fun PalettePreviewScreen(
                 exteriorColor = "DeepBlue",
                 model = "Y",
                 wheelType = "Gemini19",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             // Model Y Juniper
@@ -146,7 +204,8 @@ fun PalettePreviewScreen(
                 exteriorColor = "BlackDiamond",
                 model = "Y",
                 wheelType = "Photon18",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             // Stealth Grey (Highland)
@@ -156,7 +215,8 @@ fun PalettePreviewScreen(
                 model = "3",
                 wheelType = "Photon18",
                 trimBadging = "MT336",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             // Model S
@@ -165,7 +225,8 @@ fun PalettePreviewScreen(
                 exteriorColor = "White",
                 model = "S",
                 wheelType = "Tempest19",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             // Model X
@@ -174,7 +235,8 @@ fun PalettePreviewScreen(
                 exteriorColor = "DeepBlue",
                 model = "X",
                 wheelType = "Cyberstream20",
-                isDarkTheme = isDark
+                isDarkTheme = isDark,
+                isCharging = true
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -189,7 +251,8 @@ private fun PreviewBatteryCard(
     model: String,
     wheelType: String,
     trimBadging: String? = null,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    isCharging: Boolean = true
 ) {
     val palette = CarColorPalettes.forExteriorColor(exteriorColor, isDarkTheme)
 
@@ -212,7 +275,7 @@ private fun PreviewBatteryCard(
             )
 
             // Status indicators row
-            StatusIndicatorsRowPreview(palette = palette)
+            StatusIndicatorsRowPreview(palette = palette, isCharging = isCharging)
 
             // Car image
             PreviewCarImage(
@@ -231,30 +294,32 @@ private fun PreviewBatteryCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Filled.BatteryChargingFull,
+                        imageVector = if (isCharging) Icons.Filled.BatteryChargingFull else Icons.Filled.Battery5Bar,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                         tint = palette.onSurface
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "72%",
+                        text = if (isCharging) "72%" else "65%",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = palette.onSurface
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Filled.ElectricBolt,
-                        contentDescription = "Charging",
-                        modifier = Modifier.size(20.dp),
-                        tint = StatusSuccess
-                    )
+                    if (isCharging) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Filled.ElectricBolt,
+                            contentDescription = "Charging",
+                            modifier = Modifier.size(20.dp),
+                            tint = StatusSuccess
+                        )
+                    }
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "312 km",
+                        text = if (isCharging) "312 km" else "280 km",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = palette.onSurface
@@ -270,44 +335,76 @@ private fun PreviewBatteryCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Progress bar
-            ChargingProgressBarPreview(
-                currentLevel = 72,
-                targetLevel = 80,
-                palette = palette,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (isCharging) {
+                ChargingProgressBarPreview(
+                    currentLevel = 72,
+                    targetLevel = 80,
+                    palette = palette,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                NotChargingProgressBarPreview(
+                    currentLevel = 65,
+                    targetLevel = 80,
+                    palette = palette,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Charging info row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "11 kW",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = StatusSuccess
-                )
-                Text(
-                    text = "+15.3 kWh",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = palette.onSurfaceVariant
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Timer,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = palette.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+            // Info row
+            if (isCharging) {
+                // Charging info row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "1h 30m",
+                        text = "11 kW",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = StatusSuccess
+                    )
+                    Text(
+                        text = "+15.3 kWh",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = palette.onSurfaceVariant
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = palette.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "1h 30m",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = palette.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                // Not charging info row - show plugged status
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Not plugged in",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = palette.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Last charged 2h ago",
                         style = MaterialTheme.typography.labelSmall,
                         color = palette.onSurfaceVariant
                     )
@@ -318,7 +415,11 @@ private fun PreviewBatteryCard(
 }
 
 @Composable
-private fun StatusIndicatorsRowPreview(palette: CarColorPalette, modifier: Modifier = Modifier) {
+private fun StatusIndicatorsRowPreview(
+    palette: CarColorPalette,
+    isCharging: Boolean = true,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -329,13 +430,13 @@ private fun StatusIndicatorsRowPreview(palette: CarColorPalette, modifier: Modif
                 imageVector = Icons.Filled.Circle,
                 contentDescription = null,
                 modifier = Modifier.size(10.dp),
-                tint = StatusSuccess
+                tint = if (isCharging) StatusSuccess else StatusWarning
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = "Online",
+                text = if (isCharging) "Charging" else "Parked",
                 style = MaterialTheme.typography.labelMedium,
-                color = StatusSuccess
+                color = if (isCharging) StatusSuccess else StatusWarning
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -498,6 +599,45 @@ private fun ChargingProgressBarPreview(
         // Solid green for current charge level
         drawRect(
             color = solidGreen,
+            size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
+        )
+    }
+}
+
+@Composable
+private fun NotChargingProgressBarPreview(
+    currentLevel: Int,
+    targetLevel: Int,
+    palette: CarColorPalette,
+    modifier: Modifier = Modifier
+) {
+    val currentFraction = currentLevel / 100f
+    val targetFraction = targetLevel / 100f
+
+    Canvas(
+        modifier = modifier
+            .height(8.dp)
+            .clip(RoundedCornerShape(4.dp))
+    ) {
+        val width = size.width
+        val height = size.height
+
+        // Background
+        drawRect(
+            color = palette.progressTrack,
+            size = size
+        )
+
+        // Target marker line (vertical line at target level)
+        drawRect(
+            color = palette.onSurfaceVariant.copy(alpha = 0.5f),
+            topLeft = androidx.compose.ui.geometry.Offset(width * targetFraction - 1.dp.toPx(), 0f),
+            size = androidx.compose.ui.geometry.Size(2.dp.toPx(), height)
+        )
+
+        // Current battery level (using accent color when not charging)
+        drawRect(
+            color = palette.accent,
             size = androidx.compose.ui.geometry.Size(width * currentFraction, height)
         )
     }

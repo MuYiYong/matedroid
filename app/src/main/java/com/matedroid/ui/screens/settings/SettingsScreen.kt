@@ -362,13 +362,15 @@ private fun SettingsContent(
             }
         }
 
-        // Debug: Palette Preview button
-        Spacer(modifier = Modifier.height(32.dp))
-        OutlinedButton(
-            onClick = onPalettePreview,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Preview Color Palettes (Debug)")
+        // Debug: Palette Preview button (only visible in debug builds)
+        if (com.matedroid.BuildConfig.DEBUG) {
+            Spacer(modifier = Modifier.height(32.dp))
+            OutlinedButton(
+                onClick = onPalettePreview,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Preview Color Palettes (Debug)")
+            }
         }
     }
 }
