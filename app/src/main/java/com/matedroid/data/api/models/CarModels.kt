@@ -107,6 +107,7 @@ data class CarStatus(
     val speed: Int? get() = drivingDetails?.speed
     val power: Int? get() = drivingDetails?.power
     val heading: Int? get() = drivingDetails?.heading
+    val elevation: Int? get() = drivingDetails?.elevation
 }
 
 @JsonClass(generateAdapter = true)

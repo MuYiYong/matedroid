@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.Timer
@@ -296,7 +297,7 @@ private fun DashboardContent(
 
             // Location Section - show if we have coordinates
             if (status.latitude != null && status.longitude != null) {
-                LocationCard(status = status, resolvedAddress = resolvedAddress)
+                LocationCard(status = status, units = units, resolvedAddress = resolvedAddress)
             }
 
             // Vehicle Info Section
@@ -713,11 +714,12 @@ private fun ChargingProgressBar(
 }
 
 @Composable
-private fun LocationCard(status: CarStatus, resolvedAddress: String? = null) {
+private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: String? = null) {
     val context = LocalContext.current
     val latitude = status.latitude
     val longitude = status.longitude
     val geofence = status.geofence
+    val elevation = status.elevation
 
     // Location text: geofence name if available, then resolved address, then coordinates
     val locationText = geofence ?: resolvedAddress ?: run {
@@ -725,6 +727,17 @@ private fun LocationCard(status: CarStatus, resolvedAddress: String? = null) {
             "%.5f, %.5f".format(latitude, longitude)
         } else {
             "Unknown"
+        }
+    }
+
+    // Format elevation with unit conversion
+    val elevationText = elevation?.let {
+        val isImperial = units?.unitOfLength == "mi"
+        if (isImperial) {
+            val feet = (it * 3.28084).toInt()
+            "$feet ft"
+        } else {
+            "$it m"
         }
     }
 
@@ -745,7 +758,7 @@ private fun LocationCard(status: CarStatus, resolvedAddress: String? = null) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Icon(
                 imageVector = Icons.Filled.LocationOn,
@@ -763,6 +776,30 @@ private fun LocationCard(status: CarStatus, resolvedAddress: String? = null) {
                     text = locationText,
                     style = MaterialTheme.typography.titleMedium
                 )
+
+                // Elevation row
+                if (elevationText != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Terrain,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Elevation",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = elevationText,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
 
             // Small map showing car location
@@ -907,22 +944,11 @@ private fun TirePressureDisplay(
     val warningColor = StatusWarning
     val carBodyColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
 
-    // Pressure thresholds in bar (2.7 - 3.2 bar is normal range)
-    // Converted: 2.7 bar = 39.2 PSI, 3.2 bar = 46.4 PSI
-    val minPressureBar = 2.7
-    val maxPressureBar = 3.2
-
-    // Check if pressure is out of bounds
-    fun isPressureWarning(pressureBar: Double?): Boolean {
-        if (pressureBar == null) return false
-        return pressureBar < minPressureBar || pressureBar > maxPressureBar
-    }
-
-    // Determine colors for each tire based on pressure range (API always returns bar)
-    val flColor = if (tpms.warningFl == true || isPressureWarning(tpms.pressureFl)) warningColor else normalColor
-    val frColor = if (tpms.warningFr == true || isPressureWarning(tpms.pressureFr)) warningColor else normalColor
-    val rlColor = if (tpms.warningRl == true || isPressureWarning(tpms.pressureRl)) warningColor else normalColor
-    val rrColor = if (tpms.warningRr == true || isPressureWarning(tpms.pressureRr)) warningColor else normalColor
+    // Use API warning flags only - no hardcoded thresholds
+    val flColor = if (tpms.warningFl == true) warningColor else normalColor
+    val frColor = if (tpms.warningFr == true) warningColor else normalColor
+    val rlColor = if (tpms.warningRl == true) warningColor else normalColor
+    val rrColor = if (tpms.warningRr == true) warningColor else normalColor
 
     Row(
         modifier = Modifier
