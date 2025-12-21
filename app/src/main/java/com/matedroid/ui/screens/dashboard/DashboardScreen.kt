@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
 import com.matedroid.ui.icons.CustomIcons
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -538,18 +540,21 @@ private fun BatteryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(palette.onSurface.copy(alpha = 0.06f))
                     .clickable(onClick = onNavigateToBattery)
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Left: Battery percentage with icon
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.BatteryChargingFull,
                         contentDescription = "Tap for battery health",
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(28.dp),
                         tint = batteryColor
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -579,7 +584,7 @@ private fun BatteryCard(
                     }
                 }
 
-                // Right: Range and limit
+                // Center: Range and limit
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = status.ratedBatteryRangeKm?.let { UnitFormatter.formatDistance(it, units, 0) } ?: "--",
@@ -593,6 +598,15 @@ private fun BatteryCard(
                         color = palette.onSurfaceVariant
                     )
                 }
+
+                // Right: Chevron to indicate tappable
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = palette.onSurfaceVariant
+                )
             }
 
             // Charging section - always reserve space for consistent card height
