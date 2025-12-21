@@ -281,51 +281,40 @@ private fun DashboardContent(
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(carExterior?.exteriorColor, isDarkTheme)
 
+    // Scrollable content
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Scrollable content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Battery Section with Car Image (tappable for battery health)
-            BatteryCard(
-                status = status,
-                units = units,
-                carModel = carModel,
-                carTrimBadging = carTrimBadging,
-                carExterior = carExterior,
-                onNavigateToBattery = onNavigateToBattery
-            )
-
-            // Location Section - show if we have coordinates
-            if (status.latitude != null && status.longitude != null) {
-                LocationCard(status = status, units = units, resolvedAddress = resolvedAddress)
-            }
-
-            // Tire Pressure Section - show if data available
-            val tpms = status.tpmsDetails
-            if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
-                TirePressureCard(tpms = tpms, units = units)
-            }
-        }
-
-        // Fixed bottom quick links with values
-        QuickLinksRow(
-            palette = palette,
+        // Battery Section with Car Image (tappable for battery health)
+        BatteryCard(
             status = status,
             units = units,
+            carModel = carModel,
+            carTrimBadging = carTrimBadging,
+            carExterior = carExterior,
+            onNavigateToBattery = onNavigateToBattery
+        )
+
+        // Location Section - show if we have coordinates
+        if (status.latitude != null && status.longitude != null) {
+            LocationCard(status = status, units = units, resolvedAddress = resolvedAddress)
+        }
+
+        // Vehicle Info Card with navigation buttons
+        VehicleInfoCard(
+            status = status,
+            units = units,
+            palette = palette,
             totalCharges = totalCharges,
             totalDrives = totalDrives,
             onNavigateToCharges = onNavigateToCharges,
             onNavigateToDrives = onNavigateToDrives,
             onNavigateToMileage = onNavigateToMileage,
-            onNavigateToUpdates = onNavigateToUpdates,
-            modifier = Modifier.padding(16.dp)
+            onNavigateToUpdates = onNavigateToUpdates
         )
     }
 }
@@ -883,17 +872,154 @@ private fun SmallLocationMap(
     }
 }
 @Composable
-private fun TirePressureCard(
-    tpms: TpmsDetails,
-    units: Units?
+private fun VehicleInfoCard(
+    status: CarStatus,
+    units: Units?,
+    palette: CarColorPalette,
+    totalCharges: Int?,
+    totalDrives: Int?,
+    onNavigateToCharges: () -> Unit,
+    onNavigateToDrives: () -> Unit,
+    onNavigateToMileage: () -> Unit,
+    onNavigateToUpdates: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    val tpms = status.tpmsDetails
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = palette.surface
+        )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(16.dp)
         ) {
-            TirePressureDisplay(tpms = tpms, units = units)
+            // Title
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.DirectionsCar,
+                    contentDescription = null,
+                    tint = palette.accent,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Vehicle Info",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Navigation buttons - 2x2 grid of rectangular buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                NavButton(
+                    title = "Charges",
+                    value = totalCharges?.let { "%,d".format(it) } ?: "--",
+                    icon = Icons.Filled.ElectricBolt,
+                    palette = palette,
+                    onClick = onNavigateToCharges,
+                    modifier = Modifier.weight(1f)
+                )
+                NavButton(
+                    title = "Drives",
+                    value = totalDrives?.let { "%,d".format(it) } ?: "--",
+                    icon = CustomIcons.SteeringWheel,
+                    palette = palette,
+                    onClick = onNavigateToDrives,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                NavButton(
+                    title = "Mileage",
+                    value = status.odometer?.let {
+                        val value = UnitFormatter.formatDistanceValue(it, units, 0)
+                        "%,.0f %s".format(value, UnitFormatter.getDistanceUnit(units))
+                    } ?: "--",
+                    icon = CustomIcons.Road,
+                    palette = palette,
+                    onClick = onNavigateToMileage,
+                    modifier = Modifier.weight(1f)
+                )
+                NavButton(
+                    title = "Software",
+                    value = status.version ?: "--",
+                    icon = Icons.Filled.Settings,
+                    palette = palette,
+                    onClick = onNavigateToUpdates,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Tire pressure section - show if data available
+            if (tpms != null && (tpms.pressureFl != null || tpms.pressureFr != null)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = palette.onSurfaceVariant.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(8.dp))
+                TirePressureDisplay(tpms = tpms, units = units)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NavButton(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    palette: CarColorPalette,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = palette.onSurface.copy(alpha = 0.05f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = palette.accent
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.onSurface,
+                    maxLines = 1
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -1111,104 +1237,6 @@ private fun formatHoursMinutes(hours: Double): String {
     val h = totalMinutes / 60
     val m = totalMinutes % 60
     return if (h > 0) "${h}h ${m}m" else "${m}m"
-}
-
-@Composable
-private fun QuickLinksRow(
-    palette: CarColorPalette,
-    status: CarStatus,
-    units: Units?,
-    totalCharges: Int?,
-    totalDrives: Int?,
-    onNavigateToCharges: () -> Unit,
-    onNavigateToDrives: () -> Unit,
-    onNavigateToMileage: () -> Unit,
-    onNavigateToUpdates: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val distanceUnit = UnitFormatter.getDistanceUnit(units)
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        QuickLinkItem(
-            title = "Charges",
-            value = totalCharges?.let { "%,d".format(it) } ?: "--",
-            icon = Icons.Filled.ElectricBolt,
-            palette = palette,
-            onClick = onNavigateToCharges
-        )
-        QuickLinkItem(
-            title = "Drives",
-            value = totalDrives?.let { "%,d".format(it) } ?: "--",
-            icon = CustomIcons.SteeringWheel,
-            palette = palette,
-            onClick = onNavigateToDrives
-        )
-        QuickLinkItem(
-            title = "Mileage",
-            value = status.odometer?.let {
-                val value = UnitFormatter.formatDistanceValue(it, units, 0)
-                "%,.0f".format(value)
-            } ?: "--",
-            icon = CustomIcons.Road,
-            palette = palette,
-            onClick = onNavigateToMileage
-        )
-        QuickLinkItem(
-            title = "SW",
-            value = status.version ?: "--",
-            icon = Icons.Filled.Settings,
-            palette = palette,
-            onClick = onNavigateToUpdates
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RowScope.QuickLinkItem(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    palette: CarColorPalette,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.weight(1f),
-        colors = CardDefaults.cardColors(
-            containerColor = palette.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = palette.accent
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = palette.onSurface,
-                maxLines = 1
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = palette.onSurfaceVariant
-            )
-        }
-    }
 }
 
 @Preview(showBackground = true)
