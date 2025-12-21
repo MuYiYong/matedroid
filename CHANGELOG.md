@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Interactive Bar Charts**: Tap any bar to see exact values in a tooltip
+  - Added to Charges, Drives, Mileage, and Software Versions screens
+  - Y-axis labels showing max and min values
+- **Monthly Charts**: Added monthly bar charts to Charges and Drives screens
+- **UI Improvements**: Replaced runner icons with road icons in Mileage screen
+
 ## [0.3.0] - 2025-12-21
 
 ### Added
