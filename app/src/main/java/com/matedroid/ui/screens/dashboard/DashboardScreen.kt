@@ -303,7 +303,7 @@ private fun DashboardContent(
 
         // Location Section - show if we have coordinates
         if (status.latitude != null && status.longitude != null) {
-            LocationCard(status = status, units = units, resolvedAddress = resolvedAddress)
+            LocationCard(status = status, units = units, resolvedAddress = resolvedAddress, palette = palette)
         }
 
         // Vehicle Info Card with navigation buttons
@@ -732,7 +732,7 @@ private fun ChargingProgressBar(
 }
 
 @Composable
-private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: String? = null) {
+private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: String? = null, palette: CarColorPalette) {
     val context = LocalContext.current
     val latitude = status.latitude
     val longitude = status.longitude
@@ -773,7 +773,10 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { openInMaps() }
+            .clickable { openInMaps() },
+        colors = CardDefaults.cardColors(
+            containerColor = palette.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -784,18 +787,19 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
             Icon(
                 imageVector = Icons.Filled.LocationOn,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = palette.accent
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Location",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = palette.onSurfaceVariant
                 )
                 Text(
                     text = locationText,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = palette.onSurface
                 )
 
                 // Elevation row
@@ -805,19 +809,20 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
                         Icon(
                             imageVector = Icons.Filled.Terrain,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = palette.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Elevation",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = palette.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = elevationText,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = palette.onSurface
                         )
                     }
                 }
