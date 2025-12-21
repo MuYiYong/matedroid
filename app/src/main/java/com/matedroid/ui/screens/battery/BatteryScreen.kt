@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material3.Card
@@ -42,11 +43,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -200,6 +204,19 @@ private fun BatteryHealthContent(
 
 @Composable
 private fun CapacityCard(stats: BatteryStats, palette: CarColorPalette, onClick: () -> Unit) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            title = "Battery Capacity",
+            message = "Shows your battery's energy storage capacity.\n\n" +
+                    "• Usable (new): The original usable capacity when the car was new\n" +
+                    "• Usable (now): Current usable capacity after degradation\n" +
+                    "• Rated efficiency: Energy consumption per km under standard test conditions (Wh/km)",
+            onDismiss = { showTooltip = false }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,7 +250,9 @@ private fun CapacityCard(stats: BatteryStats, palette: CarColorPalette, onClick:
                     imageVector = Icons.Filled.Info,
                     contentDescription = "Info",
                     tint = palette.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showTooltip = true }
                 )
             }
 
@@ -333,6 +352,20 @@ private fun CapacityValueCard(
 
 @Composable
 private fun DegradationCard(stats: BatteryStats, palette: CarColorPalette, onClick: () -> Unit) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            title = "Estimated Degradation",
+            message = "Battery degradation is estimated based on Teslamate data.\n\n" +
+                    "• Capacity %: Remaining battery health compared to new\n" +
+                    "• Loss (kWh): Energy capacity lost due to degradation\n" +
+                    "• Loss (%): Percentage of original capacity lost\n\n" +
+                    "Note: This is an estimate. Tesla does not provide official degradation data.",
+            onDismiss = { showTooltip = false }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -365,7 +398,9 @@ private fun DegradationCard(stats: BatteryStats, palette: CarColorPalette, onCli
                     imageVector = Icons.Filled.Info,
                     contentDescription = "Info",
                     tint = palette.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showTooltip = true }
                 )
             }
 
@@ -563,7 +598,7 @@ private fun RangeValueCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Filled.Info,
+                imageVector = Icons.Filled.Route,
                 contentDescription = null,
                 tint = iconColor,
                 modifier = Modifier.size(24.dp)
@@ -630,6 +665,19 @@ private fun BatteryDetailScreen(
 
 @Composable
 private fun BatteryStatusCard(stats: BatteryStats) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            title = "Current Charge",
+            message = "Shows your battery's current state of charge.\n\n" +
+                    "• Battery %: The charge level displayed on your dashboard\n" +
+                    "• Usable %: Actual usable charge (Tesla reserves a small buffer for battery protection)\n\n" +
+                    "This is the current charge, not the battery's long-term health.",
+            onDismiss = { showTooltip = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -651,7 +699,7 @@ private fun BatteryStatusCard(stats: BatteryStats) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Battery Status",
+                    text = "Current Charge",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -660,7 +708,9 @@ private fun BatteryStatusCard(stats: BatteryStats) {
                     imageVector = Icons.Filled.Info,
                     contentDescription = "Info",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showTooltip = true }
                 )
             }
 
@@ -712,6 +762,19 @@ private fun BatteryStatusCard(stats: BatteryStats) {
 
 @Composable
 private fun RangeInformationCard(stats: BatteryStats) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            title = "Range Information",
+            message = "Different ways to estimate how far you can drive.\n\n" +
+                    "• Estimated Range: Based on your recent driving efficiency and current conditions\n" +
+                    "• Rated Range: Official EPA/WLTP test range (what Tesla advertises)\n" +
+                    "• Ideal Range: Maximum theoretical range under perfect conditions (no climate, flat road, moderate speed)",
+            onDismiss = { showTooltip = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -735,7 +798,9 @@ private fun RangeInformationCard(stats: BatteryStats) {
                     imageVector = Icons.Filled.Info,
                     contentDescription = "Info",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showTooltip = true }
                 )
             }
 
@@ -821,6 +886,18 @@ private fun RangeInfoRow(
 
 @Composable
 private fun EstimatedCapacityCard(stats: BatteryStats) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    if (showTooltip) {
+        InfoDialog(
+            title = "Estimated Total Capacity",
+            message = "Projects your maximum range if charged to 100%.\n\n" +
+                    "Calculated by extrapolating your current rated range at ${stats.batteryLevel}% to a full charge.\n\n" +
+                    "This helps you understand your battery's current full capacity without needing to charge to 100% (which isn't recommended for daily use).",
+            onDismiss = { showTooltip = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -844,7 +921,9 @@ private fun EstimatedCapacityCard(stats: BatteryStats) {
                     imageVector = Icons.Filled.Info,
                     contentDescription = "Info",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showTooltip = true }
                 )
             }
 
@@ -885,4 +964,33 @@ private fun EstimatedCapacityCard(stats: BatteryStats) {
             }
         }
     }
+}
+
+@Composable
+private fun InfoDialog(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Got it")
+            }
+        }
+    )
 }
