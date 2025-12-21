@@ -71,10 +71,7 @@ class DrivesViewModel @Inject constructor(
     }
 
     fun setCarId(id: Int) {
-        if (carId != id) {
-            carId = id
-            loadDrives()
-        }
+        carId = id
     }
 
     fun setDateFilter(startDate: LocalDate?, endDate: LocalDate?) {

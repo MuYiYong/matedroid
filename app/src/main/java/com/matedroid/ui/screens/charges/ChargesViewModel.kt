@@ -83,10 +83,7 @@ class ChargesViewModel @Inject constructor(
     }
 
     fun setCarId(id: Int) {
-        if (carId != id) {
-            carId = id
-            loadCharges()
-        }
+        carId = id
     }
 
     fun setDateFilter(startDate: LocalDate?, endDate: LocalDate?) {
