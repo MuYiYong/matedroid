@@ -64,6 +64,11 @@ class ChargesViewModel @Inject constructor(
     val uiState: StateFlow<ChargesUiState> = _uiState.asStateFlow()
 
     private var carId: Int? = null
+    private var showShortDrivesCharges: Boolean = false
+
+    companion object {
+        private const val MIN_ENERGY_KWH = 0.1
+    }
 
     init {
         loadCurrency()
@@ -115,21 +120,33 @@ class ChargesViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = true) }
             }
 
+            // Load the display setting
+            showShortDrivesCharges = settingsDataStore.showShortDrivesCharges.first()
+
             // API expects RFC3339 format: 2006-01-02T15:04:05Z
             val startDateStr = startDate?.let { "${it}T00:00:00Z" }
             val endDateStr = endDate?.let { "${it}T23:59:59Z" }
 
             when (val result = repository.getCharges(id, startDateStr, endDateStr)) {
                 is ApiResult.Success -> {
-                    val charges = result.data
-                    val summary = calculateSummary(charges)
+                    val allCharges = result.data
+                    // Calculate summary and chart from ALL charges (including minimal ones)
+                    val summary = calculateSummary(allCharges)
                     val granularity = determineGranularity(startDate, endDate)
-                    val chartData = calculateChartData(charges, granularity)
+                    val chartData = calculateChartData(allCharges, granularity)
+                    // Filter charges for display based on setting
+                    val displayedCharges = if (showShortDrivesCharges) {
+                        allCharges
+                    } else {
+                        allCharges.filter { charge ->
+                            (charge.chargeEnergyAdded ?: 0.0) > MIN_ENERGY_KWH
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            charges = charges,
+                            charges = displayedCharges,
                             chartData = chartData,
                             chartGranularity = granularity,
                             summary = summary,

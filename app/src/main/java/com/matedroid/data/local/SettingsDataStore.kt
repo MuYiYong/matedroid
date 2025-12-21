@@ -19,7 +19,8 @@ data class AppSettings(
     val serverUrl: String = "",
     val apiToken: String = "",
     val acceptInvalidCerts: Boolean = false,
-    val currencyCode: String = "EUR"
+    val currencyCode: String = "EUR",
+    val showShortDrivesCharges: Boolean = false
 ) {
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank()
@@ -33,14 +34,20 @@ class SettingsDataStore @Inject constructor(
     private val apiTokenKey = stringPreferencesKey("api_token")
     private val acceptInvalidCertsKey = booleanPreferencesKey("accept_invalid_certs")
     private val currencyCodeKey = stringPreferencesKey("currency_code")
+    private val showShortDrivesChargesKey = booleanPreferencesKey("show_short_drives_charges")
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         AppSettings(
             serverUrl = preferences[serverUrlKey] ?: "",
             apiToken = preferences[apiTokenKey] ?: "",
             acceptInvalidCerts = preferences[acceptInvalidCertsKey] ?: false,
-            currencyCode = preferences[currencyCodeKey] ?: "EUR"
+            currencyCode = preferences[currencyCodeKey] ?: "EUR",
+            showShortDrivesCharges = preferences[showShortDrivesChargesKey] ?: false
         )
+    }
+
+    val showShortDrivesCharges: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[showShortDrivesChargesKey] ?: false
     }
 
     suspend fun saveSettings(
@@ -60,6 +67,12 @@ class SettingsDataStore @Inject constructor(
     suspend fun saveCurrency(currencyCode: String) {
         context.dataStore.edit { preferences ->
             preferences[currencyCodeKey] = currencyCode
+        }
+    }
+
+    suspend fun saveShowShortDrivesCharges(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[showShortDrivesChargesKey] = show
         }
     }
 

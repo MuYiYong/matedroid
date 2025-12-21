@@ -19,12 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Road icon for mileage-related UI elements
   - Steering wheel icon for drives-related UI elements
   - AllInclusive icon for total statistics
+- **Show Short Drives/Charges Setting**: New display setting (disabled by default)
+  - Hides drives under 1 minute and charges of 0.1 kWh or less from lists
+  - Short entries are still included in totals, averages, and statistics
+  - Info tooltip explains the setting behavior
 
 ### Fixed
 - **Location Card**: Now properly shows address when outside geofences
   - Uses OSM/Nominatim reverse geocoding for address lookup
   - Falls back to raw coordinates if geocoding fails
   - Handles empty string geofence values from API
+
+### Changed
+- **Certificate Option Text**: Simplified to "Enable for self-signed certificates"
 
 ## [0.3.0] - 2025-12-21
 

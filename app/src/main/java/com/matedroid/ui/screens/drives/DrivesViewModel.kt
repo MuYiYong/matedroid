@@ -3,12 +3,14 @@ package com.matedroid.ui.screens.drives
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.matedroid.data.api.models.DriveData
+import com.matedroid.data.local.SettingsDataStore
 import com.matedroid.data.repository.ApiResult
 import com.matedroid.data.repository.TeslamateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -53,13 +55,19 @@ data class DrivesSummary(
 
 @HiltViewModel
 class DrivesViewModel @Inject constructor(
-    private val repository: TeslamateRepository
+    private val repository: TeslamateRepository,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DrivesUiState())
     val uiState: StateFlow<DrivesUiState> = _uiState.asStateFlow()
 
     private var carId: Int? = null
+    private var showShortDrivesCharges: Boolean = false
+
+    companion object {
+        private const val MIN_DURATION_MINUTES = 1
+    }
 
     fun setCarId(id: Int) {
         if (carId != id) {
@@ -99,21 +107,33 @@ class DrivesViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = true) }
             }
 
+            // Load the display setting
+            showShortDrivesCharges = settingsDataStore.showShortDrivesCharges.first()
+
             // API expects RFC3339 format: 2006-01-02T15:04:05Z
             val startDateStr = startDate?.let { "${it}T00:00:00Z" }
             val endDateStr = endDate?.let { "${it}T23:59:59Z" }
 
             when (val result = repository.getDrives(id, startDateStr, endDateStr)) {
                 is ApiResult.Success -> {
-                    val drives = result.data
-                    val summary = calculateSummary(drives)
+                    val allDrives = result.data
+                    // Calculate summary and chart from ALL drives (including short ones)
+                    val summary = calculateSummary(allDrives)
                     val granularity = determineGranularity(startDate, endDate)
-                    val chartData = calculateChartData(drives, granularity)
+                    val chartData = calculateChartData(allDrives, granularity)
+                    // Filter drives for display based on setting
+                    val displayedDrives = if (showShortDrivesCharges) {
+                        allDrives
+                    } else {
+                        allDrives.filter { drive ->
+                            (drive.durationMin ?: 0) >= MIN_DURATION_MINUTES
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            drives = drives,
+                            drives = displayedDrives,
                             chartData = chartData,
                             chartGranularity = granularity,
                             summary = summary,

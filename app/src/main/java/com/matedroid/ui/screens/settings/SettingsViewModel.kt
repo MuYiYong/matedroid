@@ -18,6 +18,7 @@ data class SettingsUiState(
     val apiToken: String = "",
     val acceptInvalidCerts: Boolean = false,
     val currencyCode: String = "EUR",
+    val showShortDrivesCharges: Boolean = false,
     val isLoading: Boolean = true,
     val isTesting: Boolean = false,
     val isSaving: Boolean = false,
@@ -51,6 +52,7 @@ class SettingsViewModel @Inject constructor(
                 apiToken = settings.apiToken,
                 acceptInvalidCerts = settings.acceptInvalidCerts,
                 currencyCode = settings.currencyCode,
+                showShortDrivesCharges = settings.showShortDrivesCharges,
                 isLoading = false
             )
         }
@@ -84,6 +86,13 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(currencyCode = currencyCode)
         viewModelScope.launch {
             settingsDataStore.saveCurrency(currencyCode)
+        }
+    }
+
+    fun updateShowShortDrivesCharges(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showShortDrivesCharges = show)
+        viewModelScope.launch {
+            settingsDataStore.saveShowShortDrivesCharges(show)
         }
     }
 

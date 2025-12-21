@@ -20,7 +20,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
@@ -36,6 +38,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -96,6 +100,7 @@ fun SettingsScreen(
                 onApiTokenChange = viewModel::updateApiToken,
                 onAcceptInvalidCertsChange = viewModel::updateAcceptInvalidCerts,
                 onCurrencyChange = viewModel::updateCurrency,
+                onShowShortDrivesChargesChange = viewModel::updateShowShortDrivesCharges,
                 onTestConnection = viewModel::testConnection,
                 onSave = { viewModel.saveSettings(onNavigateToDashboard) },
                 onPalettePreview = onNavigateToPalettePreview
@@ -125,12 +130,14 @@ private fun SettingsContent(
     onApiTokenChange: (String) -> Unit,
     onAcceptInvalidCertsChange: (Boolean) -> Unit,
     onCurrencyChange: (String) -> Unit,
+    onShowShortDrivesChargesChange: (Boolean) -> Unit,
     onTestConnection: () -> Unit,
     onSave: () -> Unit,
     onPalettePreview: () -> Unit = {}
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var currencyDropdownExpanded by remember { mutableStateOf(false) }
+    var showShortDrivesChargesInfoDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -231,7 +238,7 @@ private fun SettingsContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Enable for self-signed certificates (less secure)",
+                    text = "Enable for self-signed certificates",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -313,6 +320,67 @@ private fun SettingsContent(
                     )
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Show short drives / charges toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Show short drives / charges",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    IconButton(
+                        onClick = { showShortDrivesChargesInfoDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "More information",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = "Display very short drives and minimal charges in lists",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = uiState.showShortDrivesCharges,
+                onCheckedChange = onShowShortDrivesChargesChange
+            )
+        }
+
+        // Info dialog for short drives / charges
+        if (showShortDrivesChargesInfoDialog) {
+            AlertDialog(
+                onDismissRequest = { showShortDrivesChargesInfoDialog = false },
+                title = { Text("Short drives & charges") },
+                text = {
+                    Text(
+                        "When disabled (default), the following are hidden from the lists:\n\n" +
+                        "• Drives under 1 minute\n" +
+                        "• Charges of 0.1 kWh or less\n\n" +
+                        "These entries are still included in totals, averages, and statistics. " +
+                        "Enable this setting to see all entries in the lists."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showShortDrivesChargesInfoDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -427,6 +495,7 @@ private fun SettingsScreenPreview() {
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
+            onShowShortDrivesChargesChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -447,6 +516,7 @@ private fun SettingsScreenWithResultPreview() {
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
+            onShowShortDrivesChargesChange = {},
             onTestConnection = {},
             onSave = {}
         )
@@ -467,6 +537,7 @@ private fun SettingsScreenWithWarningPreview() {
             onApiTokenChange = {},
             onAcceptInvalidCertsChange = {},
             onCurrencyChange = {},
+            onShowShortDrivesChargesChange = {},
             onTestConnection = {},
             onSave = {}
         )
