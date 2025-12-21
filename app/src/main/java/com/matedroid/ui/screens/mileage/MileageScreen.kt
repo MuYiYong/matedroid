@@ -51,10 +51,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.matedroid.ui.theme.CarColorPalette
@@ -834,18 +839,44 @@ private fun SummaryItem(
 private fun SimpleBarChart(
     data: List<Pair<Int, Double>>,
     modifier: Modifier = Modifier,
-    barColor: Color = ChartBlue
+    barColor: Color = ChartBlue,
+    labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     val maxValue = data.maxOfOrNull { it.second } ?: 1.0
+    val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = modifier) {
         if (data.isEmpty()) return@Canvas
-        val barWidth = size.width / data.size * 0.7f
-        val spacing = size.width / data.size * 0.3f / 2
+
+        val yAxisWidth = 32.dp.toPx()  // Space for Y-axis labels
+        val chartWidth = size.width - yAxisWidth
+
+        // Draw max value label at top
+        drawYAxisLabel(
+            textMeasurer = textMeasurer,
+            text = if (maxValue >= 1000) "%.0fk".format(maxValue / 1000) else "%.0f".format(maxValue),
+            x = yAxisWidth - 4.dp.toPx(),
+            y = 0f,
+            color = labelColor,
+            alignTop = true
+        )
+
+        // Draw min value label (0) at bottom
+        drawYAxisLabel(
+            textMeasurer = textMeasurer,
+            text = "0",
+            x = yAxisWidth - 4.dp.toPx(),
+            y = size.height,
+            color = labelColor,
+            alignTop = false
+        )
+
+        val barWidth = chartWidth / data.size * 0.7f
+        val spacing = chartWidth / data.size * 0.3f / 2
 
         data.forEachIndexed { index, (_, value) ->
             val barHeight = if (maxValue > 0) (value / maxValue * size.height).toFloat() else 0f
-            val x = index * (barWidth + spacing * 2) + spacing
+            val x = yAxisWidth + index * (barWidth + spacing * 2) + spacing
             val y = size.height - barHeight
 
             drawRect(
@@ -855,6 +886,32 @@ private fun SimpleBarChart(
             )
         }
     }
+}
+
+private fun DrawScope.drawYAxisLabel(
+    textMeasurer: TextMeasurer,
+    text: String,
+    x: Float,
+    y: Float,
+    color: Color,
+    alignTop: Boolean
+) {
+    val textLayoutResult = textMeasurer.measure(
+        text = text,
+        style = androidx.compose.ui.text.TextStyle(
+            fontSize = 9.sp,
+            textAlign = TextAlign.End
+        )
+    )
+    val yOffset = if (alignTop) 0f else -textLayoutResult.size.height.toFloat()
+    drawText(
+        textLayoutResult = textLayoutResult,
+        color = color,
+        topLeft = Offset(
+            x = x - textLayoutResult.size.width,
+            y = y + yOffset
+        )
+    )
 }
 
 @Composable
