@@ -65,6 +65,7 @@ import com.matedroid.ui.theme.StatusSuccess
 @Composable
 fun SettingsScreen(
     onNavigateToDashboard: () -> Unit,
+    onNavigateToPalettePreview: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -96,7 +97,8 @@ fun SettingsScreen(
                 onAcceptInvalidCertsChange = viewModel::updateAcceptInvalidCerts,
                 onCurrencyChange = viewModel::updateCurrency,
                 onTestConnection = viewModel::testConnection,
-                onSave = { viewModel.saveSettings(onNavigateToDashboard) }
+                onSave = { viewModel.saveSettings(onNavigateToDashboard) },
+                onPalettePreview = onNavigateToPalettePreview
             )
         }
     }
@@ -124,7 +126,8 @@ private fun SettingsContent(
     onAcceptInvalidCertsChange: (Boolean) -> Unit,
     onCurrencyChange: (String) -> Unit,
     onTestConnection: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onPalettePreview: () -> Unit = {}
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var currencyDropdownExpanded by remember { mutableStateOf(false) }
@@ -357,6 +360,15 @@ private fun SettingsContent(
                 }
                 Text("Save & Continue")
             }
+        }
+
+        // Debug: Palette Preview button
+        Spacer(modifier = Modifier.height(32.dp))
+        OutlinedButton(
+            onClick = onPalettePreview,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Preview Color Palettes (Debug)")
         }
     }
 }

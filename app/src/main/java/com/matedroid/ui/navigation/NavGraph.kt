@@ -13,6 +13,7 @@ import com.matedroid.ui.screens.battery.BatteryScreen
 import com.matedroid.ui.screens.charges.ChargeDetailScreen
 import com.matedroid.ui.screens.charges.ChargesScreen
 import com.matedroid.ui.screens.dashboard.DashboardScreen
+import com.matedroid.ui.screens.demo.PalettePreviewScreen
 import com.matedroid.ui.screens.drives.DriveDetailScreen
 import com.matedroid.ui.screens.drives.DrivesScreen
 import com.matedroid.ui.screens.mileage.MileageScreen
@@ -48,6 +49,7 @@ sealed class Screen(val route: String) {
     data object Updates : Screen("updates/{carId}") {
         fun createRoute(carId: Int) = "updates/$carId"
     }
+    data object PalettePreview : Screen("palette_preview")
 }
 
 @Composable
@@ -71,6 +73,9 @@ fun NavGraph(
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Settings.route) { inclusive = true }
                     }
+                },
+                onNavigateToPalettePreview = {
+                    navController.navigate(Screen.PalettePreview.route)
                 }
             )
         }
@@ -188,6 +193,12 @@ fun NavGraph(
             val carId = backStackEntry.arguments?.getInt("carId") ?: return@composable
             MileageScreen(
                 carId = carId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.PalettePreview.route) {
+            PalettePreviewScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
