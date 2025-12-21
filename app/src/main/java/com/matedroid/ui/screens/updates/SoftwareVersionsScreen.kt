@@ -382,8 +382,30 @@ private fun MonthlyUpdatesChart(
                     .fillMaxWidth()
                     .height(120.dp)
             ) {
-                val barWidth = size.width / monthlyData.size
-                val maxBarHeight = size.height - 24.dp.toPx()  // Leave space for labels
+                val yAxisWidth = 24.dp.toPx()  // Space for Y-axis labels
+                val chartWidth = size.width - yAxisWidth
+                val barWidth = chartWidth / monthlyData.size
+                val maxBarHeight = size.height - 24.dp.toPx()  // Leave space for X-axis labels
+
+                // Draw max value label at top
+                drawYAxisLabel(
+                    textMeasurer = textMeasurer,
+                    text = maxCount.toString(),
+                    x = yAxisWidth - 4.dp.toPx(),
+                    y = 0f,
+                    color = labelColor,
+                    alignTop = true
+                )
+
+                // Draw min value label (0) at bottom
+                drawYAxisLabel(
+                    textMeasurer = textMeasurer,
+                    text = "0",
+                    x = yAxisWidth - 4.dp.toPx(),
+                    y = maxBarHeight,
+                    color = labelColor,
+                    alignTop = false
+                )
 
                 monthlyData.forEachIndexed { index, data ->
                     val barHeight = if (maxCount > 0) {
@@ -392,12 +414,12 @@ private fun MonthlyUpdatesChart(
                         0f
                     }
 
-                    // Draw bar
+                    // Draw bar (offset by Y-axis width)
                     if (barHeight > 0) {
                         drawRect(
                             color = barColor,
                             topLeft = Offset(
-                                x = index * barWidth + barWidth * 0.15f,
+                                x = yAxisWidth + index * barWidth + barWidth * 0.15f,
                                 y = maxBarHeight - barHeight
                             ),
                             size = Size(
@@ -413,7 +435,7 @@ private fun MonthlyUpdatesChart(
                         drawMonthLabel(
                             textMeasurer = textMeasurer,
                             text = monthLabel,
-                            x = index * barWidth + barWidth / 2,
+                            x = yAxisWidth + index * barWidth + barWidth / 2,
                             y = size.height - 4.dp.toPx(),
                             color = labelColor
                         )
@@ -444,6 +466,32 @@ private fun DrawScope.drawMonthLabel(
         topLeft = Offset(
             x = x - textLayoutResult.size.width / 2,
             y = y - textLayoutResult.size.height
+        )
+    )
+}
+
+private fun DrawScope.drawYAxisLabel(
+    textMeasurer: TextMeasurer,
+    text: String,
+    x: Float,
+    y: Float,
+    color: Color,
+    alignTop: Boolean
+) {
+    val textLayoutResult = textMeasurer.measure(
+        text = text,
+        style = TextStyle(
+            fontSize = 9.sp,
+            textAlign = TextAlign.End
+        )
+    )
+    val yOffset = if (alignTop) 0f else -textLayoutResult.size.height.toFloat()
+    drawText(
+        textLayoutResult = textLayoutResult,
+        color = color,
+        topLeft = Offset(
+            x = x - textLayoutResult.size.width,
+            y = y + yOffset
         )
     )
 }
