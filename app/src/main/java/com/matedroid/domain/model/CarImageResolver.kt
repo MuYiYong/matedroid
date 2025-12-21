@@ -175,6 +175,33 @@ object CarImageResolver {
     }
 
     /**
+     * Get the scale factor for a model variant to ensure consistent display size.
+     * Some models (Highland, Juniper, Model X) are rendered smaller by Tesla's compositor.
+     */
+    fun getScaleFactor(
+        model: String?,
+        exteriorColor: String?,
+        wheelType: String?,
+        trimBadging: String? = null
+    ): Float {
+        val colorCode = mapColor(exteriorColor)
+        val modelVariant = determineModelVariant(model, colorCode, wheelType, trimBadging)
+        return getScaleFactorForVariant(modelVariant)
+    }
+
+    /**
+     * Get the scale factor for a specific model variant.
+     */
+    fun getScaleFactorForVariant(modelVariant: String): Float {
+        return when (modelVariant) {
+            "m3h", "m3hp" -> 1.35f  // Highland Model 3 renders smaller
+            "myj" -> 1.25f          // Juniper Model Y renders smaller
+            "mx" -> 1.4f            // Model X renders smaller
+            else -> 1.0f            // Legacy models render at full size
+        }
+    }
+
+    /**
      * Get the default asset path for a model when configuration is unavailable.
      */
     fun getDefaultAssetPath(model: String?): String {

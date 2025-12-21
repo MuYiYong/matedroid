@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Battery5Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
@@ -323,6 +324,15 @@ private fun CarImage(
         )
     }
 
+    val scaleFactor = remember(carModel, carTrimBadging, carExterior) {
+        CarImageResolver.getScaleFactor(
+            model = carModel,
+            exteriorColor = carExterior?.exteriorColor,
+            wheelType = carExterior?.wheelType,
+            trimBadging = carTrimBadging
+        )
+    }
+
     val bitmap = remember(assetPath) {
         try {
             context.assets.open(assetPath).use { inputStream ->
@@ -349,7 +359,12 @@ private fun CarImage(
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Car image",
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scaleFactor
+                        scaleY = scaleFactor
+                    },
                 contentScale = ContentScale.Fit
             )
         }

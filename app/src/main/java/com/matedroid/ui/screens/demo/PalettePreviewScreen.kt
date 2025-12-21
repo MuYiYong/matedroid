@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -121,9 +122,18 @@ fun PalettePreviewScreen(
                 isDarkTheme = isDark
             )
 
+            // Model Y Legacy - Pearl White
+            PreviewBatteryCard(
+                carColor = "Pearl White (Model Y Legacy)",
+                exteriorColor = "White",
+                model = "Y",
+                wheelType = "Gemini19",
+                isDarkTheme = isDark
+            )
+
             // Deep Blue (Model Y Legacy)
             PreviewBatteryCard(
-                carColor = "Deep Blue (Model Y)",
+                carColor = "Deep Blue (Model Y Legacy)",
                 exteriorColor = "DeepBlue",
                 model = "Y",
                 wheelType = "Gemini19",
@@ -394,6 +404,15 @@ private fun PreviewCarImage(
         )
     }
 
+    val scaleFactor = remember(model, exteriorColor, wheelType, trimBadging) {
+        CarImageResolver.getScaleFactor(
+            model = model,
+            exteriorColor = exteriorColor,
+            wheelType = wheelType,
+            trimBadging = trimBadging
+        )
+    }
+
     val bitmap = remember(assetPath) {
         try {
             context.assets.open(assetPath).use { inputStream ->
@@ -419,7 +438,12 @@ private fun PreviewCarImage(
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Car image",
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scaleFactor
+                        scaleY = scaleFactor
+                    },
                 contentScale = ContentScale.Fit
             )
         }
