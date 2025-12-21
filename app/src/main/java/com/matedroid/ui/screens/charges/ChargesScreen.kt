@@ -84,12 +84,16 @@ fun ChargesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var selectedFilter by remember { mutableStateOf(DateFilter.ALL_TIME) }
+    var selectedFilter by remember { mutableStateOf(DateFilter.LAST_7_DAYS) }
     val isDarkTheme = isSystemInDarkTheme()
     val palette = CarColorPalettes.forExteriorColor(exteriorColor, isDarkTheme)
 
     LaunchedEffect(carId) {
         viewModel.setCarId(carId)
+        // Apply default 7-day filter on initial load
+        val endDate = LocalDate.now()
+        val startDate = endDate.minusDays(7)
+        viewModel.setDateFilter(startDate, endDate)
     }
 
     LaunchedEffect(uiState.error) {

@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timeline
@@ -154,6 +155,8 @@ fun DashboardScreen(
                         carTrimBadging = uiState.selectedCarTrimBadging,
                         carExterior = uiState.selectedCarExterior,
                         resolvedAddress = uiState.resolvedAddress,
+                        totalCharges = uiState.totalCharges,
+                        totalDrives = uiState.totalDrives,
                         onNavigateToCharges = {
                             uiState.selectedCarId?.let { carId ->
                                 onNavigateToCharges(carId, uiState.selectedCarExterior?.exteriorColor)
@@ -266,6 +269,8 @@ private fun DashboardContent(
     carTrimBadging: String? = null,
     carExterior: CarExterior? = null,
     resolvedAddress: String? = null,
+    totalCharges: Int? = null,
+    totalDrives: Int? = null,
     onNavigateToCharges: () -> Unit = {},
     onNavigateToDrives: () -> Unit = {},
     onNavigateToBattery: () -> Unit = {},
@@ -304,6 +309,8 @@ private fun DashboardContent(
             VehicleInfoCard(
                 status = status,
                 units = units,
+                totalCharges = totalCharges,
+                totalDrives = totalDrives,
                 onNavigateToUpdates = onNavigateToUpdates
             )
         }
@@ -869,10 +876,11 @@ private fun SmallLocationMap(
 private fun VehicleInfoCard(
     status: CarStatus,
     units: Units?,
+    totalCharges: Int? = null,
+    totalDrives: Int? = null,
     onNavigateToUpdates: () -> Unit = {}
 ) {
     val distanceUnit = UnitFormatter.getDistanceUnit(units)
-    val pressureUnit = UnitFormatter.getPressureUnit(units)
     val tpms = status.tpmsDetails
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -897,6 +905,7 @@ private fun VehicleInfoCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // 2x2 Grid of info items
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -907,13 +916,35 @@ private fun VehicleInfoCard(
                         val value = UnitFormatter.formatDistanceValue(it, units, 0)
                         "%,.0f $distanceUnit".format(value)
                     } ?: "--",
-                    icon = Icons.Filled.Speed
+                    icon = Icons.Filled.Speed,
+                    modifier = Modifier.weight(1f)
                 )
                 InfoItem(
                     label = "Software",
                     value = status.version ?: "--",
                     icon = Icons.Filled.Settings,
-                    onClick = onNavigateToUpdates
+                    onClick = onNavigateToUpdates,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                InfoItem(
+                    label = "Charges",
+                    value = totalCharges?.let { "%,d".format(it) } ?: "--",
+                    icon = Icons.Filled.BatteryChargingFull,
+                    modifier = Modifier.weight(1f)
+                )
+                InfoItem(
+                    label = "Drives",
+                    value = totalDrives?.let { "%,d".format(it) } ?: "--",
+                    icon = Icons.Filled.Route,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
@@ -1107,9 +1138,10 @@ private fun InfoItem(
     label: String,
     value: String,
     icon: ImageVector,
+    modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    val modifier = if (onClick != null) {
+    val innerModifier = if (onClick != null) {
         Modifier
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
@@ -1120,7 +1152,7 @@ private fun InfoItem(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier.then(innerModifier)
     ) {
         Icon(
             imageVector = icon,

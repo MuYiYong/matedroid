@@ -27,6 +27,8 @@ data class DashboardUiState(
     val carStatus: CarStatus? = null,
     val units: Units? = null,
     val resolvedAddress: String? = null,
+    val totalCharges: Int? = null,
+    val totalDrives: Int? = null,
     val error: String? = null
 ) {
     private val selectedCar: CarData?
@@ -124,7 +126,29 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
+        loadCounts(carId)
         startAutoRefresh(carId)
+    }
+
+    private fun loadCounts(carId: Int) {
+        viewModelScope.launch {
+            // Load charges count
+            when (val result = repository.getCharges(carId, null, null)) {
+                is ApiResult.Success -> {
+                    _uiState.value = _uiState.value.copy(totalCharges = result.data.size)
+                }
+                is ApiResult.Error -> { /* ignore */ }
+            }
+        }
+        viewModelScope.launch {
+            // Load drives count
+            when (val result = repository.getDrives(carId, null, null)) {
+                is ApiResult.Success -> {
+                    _uiState.value = _uiState.value.copy(totalDrives = result.data.size)
+                }
+                is ApiResult.Error -> { /* ignore */ }
+            }
+        }
     }
 
     private fun fetchAddressIfNeeded(status: CarStatus) {
