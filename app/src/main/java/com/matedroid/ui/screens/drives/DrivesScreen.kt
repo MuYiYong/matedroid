@@ -269,40 +269,42 @@ private fun SummaryCard(summary: DrivesSummary, palette: CarColorPalette) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 SummaryItem(
                     icon = Icons.Default.DirectionsCar,
                     label = "Total Trips",
                     value = summary.totalDrives.toString(),
-                    palette = palette
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
                 )
                 SummaryItem(
                     icon = Icons.Default.Route,
                     label = "Total Distance",
                     value = "%.1f km".format(summary.totalDistanceKm),
-                    palette = palette
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
                 SummaryItem(
                     icon = Icons.Default.Timer,
                     label = "Total Time",
                     value = formatDuration(summary.totalDurationMin),
-                    palette = palette
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
                 )
                 SummaryItem(
                     icon = Icons.Default.Speed,
                     label = "Max Speed",
                     value = "${summary.maxSpeedKmh} km/h",
-                    palette = palette
+                    palette = palette,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -314,11 +316,12 @@ private fun SummaryItem(
     icon: ImageVector,
     label: String,
     value: String,
-    palette: CarColorPalette
+    palette: CarColorPalette,
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(4.dp)
+        modifier = modifier.padding(4.dp)
     ) {
         Icon(
             imageVector = icon,
