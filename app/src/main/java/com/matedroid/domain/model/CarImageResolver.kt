@@ -111,13 +111,27 @@ object CarImageResolver {
         "18" to "WY18P"
     )
 
+    // Model S wheels
+    private val WHEEL_PATTERNS_MS = listOf(
+        "tempest19" to "WT19",
+        "19" to "WT19"
+    )
+
+    // Model X wheels
+    private val WHEEL_PATTERNS_MX = listOf(
+        "cyberstream20" to "WX20",
+        "20" to "WX20"
+    )
+
     // Default wheels per model variant
     private val DEFAULT_WHEELS = mapOf(
         "m3" to "W38B",
         "m3h" to "W38A",
         "m3hp" to "W30P",
         "my" to "WY19B",
-        "myj" to "WY18P"
+        "myj" to "WY18P",
+        "ms" to "WT19",
+        "mx" to "WX20"
     )
 
     // Default colors per model variant
@@ -126,8 +140,13 @@ object CarImageResolver {
         "m3h" to "PPSW",
         "m3hp" to "PPSW",
         "my" to "PPSW",
-        "myj" to "PPSW"
+        "myj" to "PPSW",
+        "ms" to "PPSW",
+        "mx" to "PPSW"
     )
+
+    // Model S/X valid colors (same as legacy Model Y)
+    private val MODEL_SX_COLORS = setOf("PBSB", "PMNG", "PPSW", "PPSB", "PPMR")
 
     /**
      * Get the asset path for a car image based on its configuration.
@@ -162,6 +181,8 @@ object CarImageResolver {
         val modelVariant = when (model?.uppercase()) {
             "3" -> "m3"
             "Y" -> "my"
+            "S" -> "ms"
+            "X" -> "mx"
             else -> "m3"
         }
         val defaultColor = DEFAULT_COLORS[modelVariant] ?: "PPSW"
@@ -231,6 +252,8 @@ object CarImageResolver {
                 isHighlandJuniperColor -> "myj"
                 else -> "my"
             }
+            "S" -> "ms"
+            "X" -> "mx"
             else -> "m3"
         }
     }
@@ -245,6 +268,7 @@ object CarImageResolver {
             "m3h", "m3hp" -> HIGHLAND_M3_COLORS
             "my" -> LEGACY_MY_COLORS
             "myj" -> JUNIPER_MY_COLORS
+            "ms", "mx" -> MODEL_SX_COLORS
             else -> LEGACY_M3_COLORS
         }
 
@@ -272,6 +296,8 @@ object CarImageResolver {
             "m3hp" -> WHEEL_PATTERNS_M3HP
             "my" -> WHEEL_PATTERNS_MY
             "myj" -> WHEEL_PATTERNS_MYJ
+            "ms" -> WHEEL_PATTERNS_MS
+            "mx" -> WHEEL_PATTERNS_MX
             else -> WHEEL_PATTERNS_M3
         }
 

@@ -121,22 +121,49 @@ fun PalettePreviewScreen(
                 isDarkTheme = isDark
             )
 
-            // Deep Blue
+            // Deep Blue (Model Y Legacy)
             PreviewBatteryCard(
-                carColor = "Deep Blue",
+                carColor = "Deep Blue (Model Y)",
                 exteriorColor = "DeepBlue",
                 model = "Y",
                 wheelType = "Gemini19",
                 isDarkTheme = isDark
             )
 
+            // Model Y Juniper
+            PreviewBatteryCard(
+                carColor = "Black Diamond (Model Y Juniper)",
+                exteriorColor = "BlackDiamond",
+                model = "Y",
+                wheelType = "Photon18",
+                isDarkTheme = isDark
+            )
+
             // Stealth Grey (Highland)
             PreviewBatteryCard(
-                carColor = "Stealth Grey",
+                carColor = "Stealth Grey (Model 3 Highland)",
                 exteriorColor = "StealthGrey",
                 model = "3",
                 wheelType = "Photon18",
                 trimBadging = "MT336",
+                isDarkTheme = isDark
+            )
+
+            // Model S
+            PreviewBatteryCard(
+                carColor = "Pearl White (Model S)",
+                exteriorColor = "White",
+                model = "S",
+                wheelType = "Tempest19",
+                isDarkTheme = isDark
+            )
+
+            // Model X
+            PreviewBatteryCard(
+                carColor = "Deep Blue (Model X)",
+                exteriorColor = "DeepBlue",
+                model = "X",
+                wheelType = "Cyberstream20",
                 isDarkTheme = isDark
             )
 

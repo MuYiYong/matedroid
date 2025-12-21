@@ -39,7 +39,7 @@ OLD_BKBA_OPT = 1  # Transparent background
 
 # New Compositor (Highland Model 3 2024+, Juniper Model Y 2025+)
 NEW_COMPOSITOR_URL = "https://static-assets.tesla.com/configurator/compositor"
-NEW_VIEW = "STUD_FRONT34"
+NEW_VIEW = "STUD_3QTR"  # Use same view as old compositor for consistent sizing
 NEW_SIZE = 800
 NEW_BKBA_OPT = 1  # Transparent background (1=PNG transparent, 2=JPEG opaque)
 NEW_CONTEXT = "design_studio_2"
@@ -103,8 +103,28 @@ JUNIPER_MY = {
     "compositor": "new",
 }
 
+# Model S (Legacy compositor)
+MODEL_S = {
+    "model_code": "ms",
+    "file_prefix": "ms",
+    "name": "Model S",
+    "colors": ["PBSB", "PMNG", "PPSW", "PPSB", "PPMR"],
+    "wheels": ["WT19"],  # 19" Tempest wheels
+    "compositor": "old",
+}
+
+# Model X (Legacy compositor)
+MODEL_X = {
+    "model_code": "mx",
+    "file_prefix": "mx",
+    "name": "Model X",
+    "colors": ["PBSB", "PMNG", "PPSW", "PPSB", "PPMR"],
+    "wheels": ["WX20"],  # 20" Cyberstream wheels
+    "compositor": "old",
+}
+
 # All model configurations
-ALL_MODELS = [LEGACY_M3, HIGHLAND_M3, HIGHLAND_M3_PERF, LEGACY_MY, JUNIPER_MY]
+ALL_MODELS = [LEGACY_M3, HIGHLAND_M3, HIGHLAND_M3_PERF, LEGACY_MY, JUNIPER_MY, MODEL_S, MODEL_X]
 
 # Color name mapping for display
 COLOR_NAMES = {
