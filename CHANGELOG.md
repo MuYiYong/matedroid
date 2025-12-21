@@ -9,75 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Interactive Bar Charts**: Tap any bar to see exact values in a tooltip
-  - Added to Charges, Drives, Mileage, and Software Versions screens
-  - Y-axis labels showing max and min values
-- **Dynamic Chart Granularity**: Charts in Charges and Drives screens adapt to date range
-  - 30 days or less: daily bars
-  - 31-90 days: weekly bars
-  - More than 90 days: monthly bars
-- **Custom Icons**: Added Material Symbols icons not available in Compose
-  - Road icon for mileage-related UI elements
-  - Steering wheel icon for drives-related UI elements
-  - AllInclusive icon for total statistics
-- **Show Short Drives/Charges Setting**: New display setting (disabled by default)
-  - Hides drives under 1 minute and charges of 0.1 kWh or less from lists
-  - Short entries are still included in totals, averages, and statistics
-  - Info tooltip explains the setting behavior
-
-### Fixed
-- **Location Card**: Now properly shows address when outside geofences
-  - Uses OSM/Nominatim reverse geocoding for address lookup
-  - Falls back to raw coordinates if geocoding fails
-  - Handles empty string geofence values from API
+- **Dynamic Chart Granularity**: Charts adapt to date range (daily/weekly/monthly)
+- **Show Short Drives/Charges Setting**: Hide trivial entries from lists (keeps them in totals)
 
 ### Changed
-- **Certificate Option Text**: Simplified to "Enable for self-signed certificates"
+- **Tire Pressure Display**: Redesigned with compact Tesla outline and status dots
+- **Settings Toggles**: Certificate and display options now use toggle switches
+
+### Fixed
+- **Location Card**: Shows reverse-geocoded address when outside geofences
+- **Dashboard Cards**: Consistent styling across all cards
 
 ## [0.3.0] - 2025-12-21
 
 ### Added
-- **Dashboard**: Real-time vehicle status with dynamic Tesla 3D car images
-  - Battery level, range, and charging status
-  - Climate information (inside/outside temperature)
-  - Vehicle state (locked, location, software version)
-  - Car images adapt to your vehicle's color, model, and wheels
-- **Charges Screen**: Complete charging history
-  - Summary statistics (sessions, energy, cost)
-  - Date filtering (7/30/90 days, year, all time)
-  - Charge details with power/voltage/current profiles
-  - Interactive line graphs with Y-axis labels
-  - Map showing charge location
-- **Drives Screen**: Drive history with efficiency metrics
-  - Summary statistics (distance, energy, efficiency)
-  - Drive details with speed/power/battery/elevation graphs
-  - Route map visualization
-  - Start and end times with duration
-- **Mileage Screen**: Yearly/monthly/daily mileage breakdown
-  - Interactive drill-down (year → month → day)
-  - Bar charts with car accent colors
-  - Statistics per period
-- **Software Versions Screen**: Update history tracking
-  - Overview with total updates and average interval
-  - Monthly updates bar chart
-  - Duration and days installed per version
-  - Trophy badge for longest-installed version
+- **Dashboard**: Real-time vehicle status with dynamic Tesla 3D car images matching your vehicle's color, model, and wheels
+- **Charges Screen**: Charging history with statistics, date filtering, and detailed graphs
+- **Drives Screen**: Drive history with efficiency metrics, route maps, and detailed graphs
+- **Mileage Screen**: Yearly/monthly/daily mileage breakdown with drill-down navigation
+- **Software Versions Screen**: Update history with statistics and version timeline
 - **Battery Health Screen**: Battery degradation tracking
-- **Car Color Palettes**: Dynamic UI theming based on car exterior color
-  - Supports all Tesla colors including Highland/Juniper models
-  - Accent colors for UI elements and graphs
-- **Settings**: TeslamateApi server configuration
-  - URL and API token configuration
-  - Accept invalid certificates option for self-hosted
-  - Currency selection for cost display
-
-### Technical
-- Jetpack Compose with Material Design 3
-- Dark/light mode with dynamic colors (Android 12+)
-- Pull-to-refresh on all data screens
-- Hilt dependency injection
-- Retrofit + Moshi for API communication
-- DataStore for settings persistence
-- OSMDroid for map visualization
+- **Car Color Palettes**: UI theming adapts to your car's exterior color
+- **Settings**: Server configuration with currency selection
 
 ## [0.2.0] - 2025-12-20
 
