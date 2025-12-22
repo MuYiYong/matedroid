@@ -142,7 +142,7 @@ https://static-assets.tesla.com/configurator/compositor?context=design_studio_2&
 | `Performance20*` | `W32P` | `WY20P` | 20" Performance |
 | `Uberturbine21*` | - | `WY1S` | 21" Uberturbine (MY) |
 | `Photon18*` | `W38A` | `WY18P` | 18" Photon (Highland/Juniper) |
-| `Helix19*` | `W38A`* | - | 19" Helix (Highland M3) - *fallback, not in compositor |
+| `Nova19*`, `Helix19*` | `W38A`* | - | 19" Nova (Highland M3) - *fallback, not in compositor |
 | `Crossflow19*` | - | `WY19P` | 19" Crossflow (Juniper MY) |
 | `Glider18*`, `Nova18*` | `W38A` | - | 18" Glider/Nova (Highland M3) |
 
@@ -205,7 +205,7 @@ The old compositor supports Model S (`ms`) and Model X (`mx`) with legacy colors
 
 ### 8. Missing Wheel Options in Compositor
 Some newer wheel options are not yet available in Tesla's compositor:
-- **Helix19** (Highland M3): 19" Helix wheels - falls back to W38A (18" Photon) visually
+- **Nova 19"** (Highland M3): TeslamateAPI reports as "Helix19" - falls back to W38A (18" Photon) visually
 
 ### 9. bkba_opt Parameter Controls Output Format
 Both compositors support the `bkba_opt` parameter:
