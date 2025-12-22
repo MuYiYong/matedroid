@@ -22,14 +22,15 @@ android {
 
     signingConfigs {
         create("release") {
-            // CI: use secrets from environment variables
-            // Local: fall back to debug keystore
-            val keystorePath = System.getenv("KEYSTORE_BASE64")?.let { "release.keystore" }
-                ?: "${System.getProperty("user.home")}/.android/debug.keystore"
+            // CI: use secrets from environment variables (if non-empty)
+            // Local/CI without secrets: fall back to debug keystore
+            val keystoreBase64 = System.getenv("KEYSTORE_BASE64")?.takeIf { it.isNotEmpty() }
+            val keystorePath = if (keystoreBase64 != null) "release.keystore"
+                else "${System.getProperty("user.home")}/.android/debug.keystore"
             storeFile = file(keystorePath)
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
+            storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotEmpty() } ?: "android"
+            keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotEmpty() } ?: "androiddebugkey"
+            keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotEmpty() } ?: "android"
         }
     }
 
