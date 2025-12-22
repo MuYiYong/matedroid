@@ -48,7 +48,7 @@ object CarImageResolver {
     private val HIGHLAND_JUNIPER_COLORS = setOf("PN00", "PN01", "PR01", "PX02")
 
     // Wheel types only available on Highland Model 3 (normalized, lowercase)
-    private val HIGHLAND_M3_WHEEL_TYPES = setOf("photon18", "glider18", "nova18", "w38a")
+    private val HIGHLAND_M3_WHEEL_TYPES = setOf("photon18", "glider18", "nova18", "helix19", "w38a")
 
     // Wheel types only available on Juniper Model Y (normalized, lowercase)
     private val JUNIPER_MY_WHEEL_TYPES = setOf("photon18", "wy18p", "crossflow19", "wy19p")
@@ -82,10 +82,13 @@ object CarImageResolver {
     )
 
     // Highland Model 3 wheels
+    // Note: Helix19 maps to W38A as Tesla compositor doesn't have it yet
     private val WHEEL_PATTERNS_M3H = listOf(
+        "helix19" to "W38A",   // 19" Helix - compositor fallback to W38A
         "photon18" to "W38A",
         "glider18" to "W38A",  // Also known as Nova wheels
         "nova18" to "W38A",
+        "19" to "W38A",        // Default 19" to W38A (Helix fallback)
         "18" to "W38A"
     )
 
