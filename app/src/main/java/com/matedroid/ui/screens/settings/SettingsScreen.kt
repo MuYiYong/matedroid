@@ -438,6 +438,16 @@ private fun SettingsContent(
                 Text("Preview Color Palettes (Debug)")
             }
         }
+
+        // Version number at bottom
+        Spacer(modifier = Modifier.height(48.dp))
+        Text(
+            text = "v${com.matedroid.BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
