@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-12-22
+
 ### Added
+- **App Icon**: New MateDroid logo
 - **GitHub Actions CI**: Automatic APK build and release asset upload on new releases
+- **Model Y Juniper Support**: Crossflow19 wheel detection and car images
+- **Highland M3 Support**: Nova19/Helix19 wheel detection (visual fallback to Photon18)
+
+### Fixed
+- **Car Name Display**: Show "Model Y/3/S/X" when owner hasn't set a custom name
 
 ## [0.4.0] - 2025-12-22
 
