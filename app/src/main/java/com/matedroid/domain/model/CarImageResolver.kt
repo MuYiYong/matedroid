@@ -12,7 +12,13 @@ package com.matedroid.domain.model
  * - Legacy Model 3 (pre-2024): m3_{color}_{wheel}.png
  * - Highland Model 3 (2024+): m3h_{color}_{wheel}.png or m3hp_{color}_{wheel}.png
  * - Legacy Model Y (pre-2025): my_{color}_{wheel}.png
- * - Juniper Model Y (2025+): myj_{color}_{wheel}.png
+ * - Juniper Model Y (2025+): myj_{color}_{wheel}.png (Standard/Premium)
+ * - Juniper Model Y Performance (2025+): myjp_{color}_{wheel}.png (has red calipers)
+ *
+ * Juniper Model Y trim detection via trim_badging:
+ * - "50" = Standard Range (18" Photon wheels)
+ * - "74", "74D" = Long Range/Premium (19" Crossflow wheels)
+ * - "P74D" = Performance (21" Überturbine wheels, red calipers)
  */
 object CarImageResolver {
 
@@ -30,7 +36,7 @@ object CarImageResolver {
         "white" to "PPSW",
         "pearlwhite" to "PPSW",
         "pearlwhitemulticoat" to "PPSW",
-        "deepblue" to "PPSB",
+        "deepblue" to "PPSB",  // Legacy deep blue
         "deepbluemetallic" to "PPSB",
         "blue" to "PPSB",
         "red" to "PPMR",
@@ -42,6 +48,7 @@ object CarImageResolver {
         "midnightcherryred" to "PR00",
         "ultrared" to "PR01",
         "blackdiamond" to "PX02"
+        // Note: PB02 (Juniper Deep Blue) is handled via fallback - same TeslamateAPI name as PPSB
     )
 
     // Colors only available on Highland/Juniper
@@ -52,7 +59,7 @@ object CarImageResolver {
     private val HIGHLAND_M3_WHEEL_TYPES = setOf("photon18", "glider18", "nova18", "nova19", "helix19", "w38a")
 
     // Wheel types only available on Juniper Model Y (normalized, lowercase)
-    private val JUNIPER_MY_WHEEL_TYPES = setOf("photon18", "wy18p", "crossflow19", "wy19p")
+    private val JUNIPER_MY_WHEEL_TYPES = setOf("photon18", "wy18p", "crossflow19", "wy19p", "helix20", "wy20a")
 
     // Legacy Model 3 valid colors
     private val LEGACY_M3_COLORS = setOf("PBSB", "PMNG", "PMSS", "PPSW", "PPSB", "PPMR", "PMBL")
@@ -63,8 +70,12 @@ object CarImageResolver {
     // Legacy Model Y valid colors
     private val LEGACY_MY_COLORS = setOf("PBSB", "PMNG", "PPSW", "PPSB", "PPMR")
 
-    // Juniper Model Y valid colors
-    private val JUNIPER_MY_COLORS = setOf("PPSW", "PN01", "PX02")
+    // Juniper Model Y valid colors (Standard/Premium)
+    // Note: PN00/PR01/PPSB only available with Premium (MTY60) 19"/20" wheels
+    private val JUNIPER_MY_COLORS = setOf("PPSW", "PN01", "PX02", "PN00", "PR01", "PPSB")
+
+    // Juniper Model Y Performance valid colors (all 6 colors)
+    private val JUNIPER_MY_PERF_COLORS = setOf("PPSW", "PN01", "PX02", "PB02", "PN00", "PR01")
 
     // Wheel code mappings per model variant
     // Keys are patterns that match the start of the TeslamateAPI wheel type
@@ -118,12 +129,20 @@ object CarImageResolver {
         "18" to "WY18B"
     )
 
-    // Juniper Model Y wheels
+    // Juniper Model Y wheels (Standard/Premium)
     private val WHEEL_PATTERNS_MYJ = listOf(
+        "helix20" to "WY20A",
         "crossflow19" to "WY19P",
         "photon18" to "WY18P",
+        "20" to "WY20A",
         "19" to "WY19P",
         "18" to "WY18P"
+    )
+
+    // Juniper Model Y Performance wheels
+    private val WHEEL_PATTERNS_MYJP = listOf(
+        "uberturbine21" to "WY21A",
+        "21" to "WY21A"
     )
 
     // Model S wheels
@@ -145,6 +164,7 @@ object CarImageResolver {
         "m3hp" to "W30P",
         "my" to "WY19B",
         "myj" to "WY18P",
+        "myjp" to "WY21A",
         "ms" to "WT19",
         "mx" to "WX20"
     )
@@ -156,6 +176,7 @@ object CarImageResolver {
         "m3hp" to "PPSW",
         "my" to "PPSW",
         "myj" to "PPSW",
+        "myjp" to "PPSW",
         "ms" to "PPSW",
         "mx" to "PPSW"
     )
@@ -210,7 +231,7 @@ object CarImageResolver {
     fun getScaleFactorForVariant(modelVariant: String): Float {
         return when (modelVariant) {
             "m3h", "m3hp" -> 1.35f  // Highland Model 3 renders smaller
-            "myj" -> 1.25f          // Juniper Model Y renders smaller
+            "myj", "myjp" -> 1.25f  // Juniper Model Y renders smaller
             "mx" -> 1.4f            // Model X renders smaller
             else -> 1.0f            // Legacy models render at full size
         }
@@ -271,6 +292,11 @@ object CarImageResolver {
      * 1. If color is a new Highland/Juniper-only color (PN00, PN01, PR01, PX02), use Highland/Juniper
      * 2. If wheel type is a Highland/Juniper-only wheel (Photon18, Glider18, etc.), use Highland/Juniper
      * 3. Otherwise, assume legacy
+     *
+     * Trim badging for Juniper Model Y:
+     * - "50" = Standard Range (18" Photon wheels)
+     * - "74", "74D" = Long Range/Premium (19" Crossflow wheels)
+     * - "P74D" = Performance (21" Überturbine wheels, red calipers)
      */
     private fun determineModelVariant(
         model: String?,
@@ -288,9 +314,13 @@ object CarImageResolver {
         val isHighlandM3Wheel = normalizedWheel != null && HIGHLAND_M3_WHEEL_TYPES.any { normalizedWheel.startsWith(it) }
         val isJuniperMYWheel = normalizedWheel != null && JUNIPER_MY_WHEEL_TYPES.any { normalizedWheel.startsWith(it) }
 
-        // Check for Performance trim
+        // Check for Performance trim (P prefix like "P74D")
         val isPerformance = trimBadging?.uppercase()?.startsWith("P") == true ||
                 trimBadging?.lowercase()?.contains("performance") == true
+
+        // Check for 21" Überturbine wheels (Performance-only on Juniper)
+        val isJuniperPerfWheel = normalizedWheel?.startsWith("uberturbine21") == true ||
+                normalizedWheel?.startsWith("21") == true
 
         return when (baseModel) {
             "3" -> when {
@@ -299,6 +329,9 @@ object CarImageResolver {
                 else -> "m3"
             }
             "Y" -> when {
+                // Juniper Performance: P74D trim or 21" wheels
+                (isHighlandJuniperColor || isJuniperMYWheel || isJuniperPerfWheel) && (isPerformance || isJuniperPerfWheel) -> "myjp"
+                // Juniper Standard/Premium: non-P trim with Juniper colors/wheels
                 isHighlandJuniperColor || isJuniperMYWheel -> "myj"
                 else -> "my"
             }
@@ -318,6 +351,7 @@ object CarImageResolver {
             "m3h", "m3hp" -> HIGHLAND_M3_COLORS
             "my" -> LEGACY_MY_COLORS
             "myj" -> JUNIPER_MY_COLORS
+            "myjp" -> JUNIPER_MY_PERF_COLORS
             "ms", "mx" -> MODEL_SX_COLORS
             else -> LEGACY_M3_COLORS
         }
@@ -346,6 +380,7 @@ object CarImageResolver {
             "m3hp" -> WHEEL_PATTERNS_M3HP
             "my" -> WHEEL_PATTERNS_MY
             "myj" -> WHEEL_PATTERNS_MYJ
+            "myjp" -> WHEEL_PATTERNS_MYJP
             "ms" -> WHEEL_PATTERNS_MS
             "mx" -> WHEEL_PATTERNS_MX
             else -> WHEEL_PATTERNS_M3
