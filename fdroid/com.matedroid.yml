@@ -26,7 +26,7 @@ AllowedAPKSigningKeys: 92b34b1e456504fbacafcc3505d132c630eac75f0bd96878d4b769b20
 Builds:
   - versionName: 0.8.2
     versionCode: 13
-    commit: 9fa66a3923a2e9ad27549566ecf7043374dea9b3
+    commit: f9c1f5dc47a250bac2a6662c55f25b2d6358470e
     subdir: app
     gradle:
       - yes
