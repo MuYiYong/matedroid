@@ -157,4 +157,84 @@ interface ChargeSummaryDao {
         ORDER BY year DESC
     """)
     suspend fun getYears(carId: Int): List<Int>
+
+    // === Range Records Queries ===
+
+    /**
+     * Find the maximum distance traveled between two consecutive charges.
+     * Sums actual logged drives between charges (not odometer diff, which can include unlogged drives).
+     */
+    @Query("""
+        SELECT
+            prev.chargeId as fromChargeId,
+            curr.chargeId as toChargeId,
+            COALESCE((
+                SELECT SUM(d.distance)
+                FROM drives_summary d
+                WHERE d.carId = curr.carId
+                  AND d.startDate > prev.startDate
+                  AND d.startDate < curr.startDate
+            ), 0) as distance,
+            prev.startDate as fromDate,
+            curr.startDate as toDate
+        FROM charges_summary curr
+        INNER JOIN charges_summary prev ON prev.carId = curr.carId
+            AND prev.startDate = (
+                SELECT MAX(p.startDate)
+                FROM charges_summary p
+                WHERE p.carId = curr.carId AND p.startDate < curr.startDate
+            )
+        WHERE curr.carId = :carId
+        ORDER BY distance DESC
+        LIMIT 1
+    """)
+    suspend fun maxDistanceBetweenCharges(carId: Int): MaxDistanceBetweenChargesResult?
+
+    /**
+     * Find the maximum distance traveled between two consecutive charges within a date range.
+     * Both charges must be within the range.
+     * Sums actual logged drives between charges (not odometer diff, which can include unlogged drives).
+     */
+    @Query("""
+        SELECT
+            prev.chargeId as fromChargeId,
+            curr.chargeId as toChargeId,
+            COALESCE((
+                SELECT SUM(d.distance)
+                FROM drives_summary d
+                WHERE d.carId = curr.carId
+                  AND d.startDate > prev.startDate
+                  AND d.startDate < curr.startDate
+            ), 0) as distance,
+            prev.startDate as fromDate,
+            curr.startDate as toDate
+        FROM charges_summary curr
+        INNER JOIN charges_summary prev ON prev.carId = curr.carId
+            AND prev.startDate = (
+                SELECT MAX(p.startDate)
+                FROM charges_summary p
+                WHERE p.carId = curr.carId AND p.startDate < curr.startDate
+            )
+        WHERE curr.carId = :carId
+            AND prev.startDate >= :startDate
+            AND curr.startDate < :endDate
+        ORDER BY distance DESC
+        LIMIT 1
+    """)
+    suspend fun maxDistanceBetweenChargesInRange(
+        carId: Int,
+        startDate: String,
+        endDate: String
+    ): MaxDistanceBetweenChargesResult?
 }
+
+/**
+ * Result of max distance between charges query.
+ */
+data class MaxDistanceBetweenChargesResult(
+    val fromChargeId: Int,
+    val toChargeId: Int,
+    val distance: Double,
+    val fromDate: String,
+    val toDate: String
+)
