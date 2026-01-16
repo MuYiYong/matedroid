@@ -1,10 +1,8 @@
 package com.matedroid.ui.screens.drives
 
 import android.content.Intent
-import android.graphics.Color as AndroidColor
 import android.graphics.Paint
 import android.net.Uri
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,9 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +68,7 @@ import com.matedroid.data.api.models.DrivePosition
 import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.WeatherPoint
 import com.matedroid.domain.model.UnitFormatter
+import com.matedroid.ui.components.OptimizedLineChart
 import com.matedroid.ui.theme.CarColorPalettes
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -255,11 +252,14 @@ private fun DriveDetailContent(
 
             // Charts
             if (!detail.positions.isNullOrEmpty() && detail.positions.size > 2) {
-                SpeedChartCard(positions = detail.positions, units = units)
-                PowerChartCard(positions = detail.positions)
-                BatteryChartCard(positions = detail.positions)
+                // Extract time labels for X axis (5 labels: start, 1st quarter, half, 3rd quarter, end)
+                val timeLabels = extractTimeLabels(detail.positions)
+
+                SpeedChartCard(positions = detail.positions, units = units, timeLabels = timeLabels)
+                PowerChartCard(positions = detail.positions, timeLabels = timeLabels)
+                BatteryChartCard(positions = detail.positions, timeLabels = timeLabels)
                 if (detail.positions.any { it.elevation != null && it.elevation != 0 }) {
-                    ElevationChartCard(positions = detail.positions)
+                    ElevationChartCard(positions = detail.positions, timeLabels = timeLabels)
                 }
             }
         }
@@ -592,7 +592,7 @@ private fun StatItemView(
 }
 
 @Composable
-private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?) {
+private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?, timeLabels: List<String>) {
     val speeds = positions.mapNotNull { it.speed?.toFloat() }
     if (speeds.size < 2) return
 
@@ -602,6 +602,7 @@ private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?) {
         data = speeds,
         color = MaterialTheme.colorScheme.primary,
         unit = UnitFormatter.getSpeedUnit(units),
+        timeLabels = timeLabels,
         convertValue = { value ->
             if (units?.isImperial == true) (value * 0.621371f) else value
         }
@@ -609,7 +610,7 @@ private fun SpeedChartCard(positions: List<DrivePosition>, units: Units?) {
 }
 
 @Composable
-private fun PowerChartCard(positions: List<DrivePosition>) {
+private fun PowerChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
     val powers = positions.mapNotNull { it.power?.toFloat() }
     if (powers.size < 2) return
 
@@ -619,12 +620,13 @@ private fun PowerChartCard(positions: List<DrivePosition>) {
         data = powers,
         color = MaterialTheme.colorScheme.tertiary,
         unit = "kW",
-        showZeroLine = true
+        showZeroLine = true,
+        timeLabels = timeLabels
     )
 }
 
 @Composable
-private fun BatteryChartCard(positions: List<DrivePosition>) {
+private fun BatteryChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
     val batteryLevels = positions.mapNotNull { it.batteryLevel?.toFloat() }
     if (batteryLevels.size < 2) return
 
@@ -634,12 +636,13 @@ private fun BatteryChartCard(positions: List<DrivePosition>) {
         data = batteryLevels,
         color = MaterialTheme.colorScheme.secondary,
         unit = "%",
-        fixedMinMax = Pair(0f, 100f)
+        fixedMinMax = Pair(0f, 100f),
+        timeLabels = timeLabels
     )
 }
 
 @Composable
-private fun ElevationChartCard(positions: List<DrivePosition>) {
+private fun ElevationChartCard(positions: List<DrivePosition>, timeLabels: List<String>) {
     val elevations = positions.mapNotNull { it.elevation?.toFloat() }
     if (elevations.size < 2) return
 
@@ -648,7 +651,8 @@ private fun ElevationChartCard(positions: List<DrivePosition>) {
         icon = Icons.Default.Landscape,
         data = elevations,
         color = Color(0xFF8B4513), // Brown color for terrain
-        unit = "m"
+        unit = "m",
+        timeLabels = timeLabels
     )
 }
 
@@ -661,6 +665,7 @@ private fun ChartCard(
     unit: String,
     showZeroLine: Boolean = false,
     fixedMinMax: Pair<Float, Float>? = null,
+    timeLabels: List<String> = emptyList(),
     convertValue: (Float) -> Float = { it }
 ) {
     Card(
@@ -690,88 +695,50 @@ private fun ChartCard(
                 )
             }
 
-            val convertedData = data.map { convertValue(it) }
-            val minValue = fixedMinMax?.first ?: convertedData.minOrNull() ?: 0f
-            val maxValue = fixedMinMax?.second ?: convertedData.maxOrNull() ?: 1f
-            val range = (maxValue - minValue).coerceAtLeast(1f)
+            OptimizedLineChart(
+                data = data,
+                color = color,
+                unit = unit,
+                showZeroLine = showZeroLine,
+                fixedMinMax = fixedMinMax,
+                timeLabels = timeLabels,
+                convertValue = convertValue,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
 
-            val surfaceColor = MaterialTheme.colorScheme.onSurface
-            val gridColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+/**
+ * Extract 5 time labels from drive positions for X axis display.
+ * Returns list of 5 time strings at 0%, 25%, 50%, 75%, and 100% positions.
+ * Following the chart guidelines: start, 1st quarter, half, 3rd quarter, end.
+ */
+private fun extractTimeLabels(positions: List<DrivePosition>): List<String> {
+    if (positions.isEmpty()) return listOf("", "", "", "", "")
 
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                val width = size.width
-                val height = size.height
-                val stepX = width / (convertedData.size - 1).coerceAtLeast(1)
-
-                // Draw grid lines
-                val gridLineCount = 4
-                for (i in 0..gridLineCount) {
-                    val y = height * i / gridLineCount
-                    drawLine(
-                        color = gridColor,
-                        start = Offset(0f, y),
-                        end = Offset(width, y),
-                        strokeWidth = 1f
-                    )
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    val times = positions.mapNotNull { position ->
+        position.date?.let { dateStr ->
+            try {
+                val dateTime = try {
+                    OffsetDateTime.parse(dateStr).toLocalDateTime()
+                } catch (e: DateTimeParseException) {
+                    LocalDateTime.parse(dateStr.replace("Z", ""))
                 }
-
-                // Draw zero line if needed (for power chart)
-                if (showZeroLine && minValue < 0 && maxValue > 0) {
-                    val zeroY = height * (1 - (0f - minValue) / range)
-                    drawLine(
-                        color = surfaceColor.copy(alpha = 0.5f),
-                        start = Offset(0f, zeroY),
-                        end = Offset(width, zeroY),
-                        strokeWidth = 2f
-                    )
-                }
-
-                // Draw the line chart
-                if (convertedData.size >= 2) {
-                    for (i in 0 until convertedData.size - 1) {
-                        val x1 = i * stepX
-                        val x2 = (i + 1) * stepX
-                        val y1 = height * (1 - (convertedData[i] - minValue) / range)
-                        val y2 = height * (1 - (convertedData[i + 1] - minValue) / range)
-
-                        drawLine(
-                            color = color,
-                            start = Offset(x1, y1),
-                            end = Offset(x2, y2),
-                            strokeWidth = 2.5f
-                        )
-                    }
-                }
-
-                // Draw Y-axis labels for all grid lines
-                drawContext.canvas.nativeCanvas.apply {
-                    val textPaint = Paint().apply {
-                        this.color = surfaceColor.copy(alpha = 0.7f).toArgb()
-                        textSize = 26f
-                        isAntiAlias = true
-                    }
-
-                    for (i in 0..gridLineCount) {
-                        val y = height * i / gridLineCount
-                        val value = maxValue - (range * i / gridLineCount)
-                        val label = "%.0f".format(value) + " $unit"
-
-                        // Position the label: top labels below line, bottom labels above line
-                        val textY = when (i) {
-                            0 -> y + textPaint.textSize + 2f
-                            gridLineCount -> y - 4f
-                            else -> y + textPaint.textSize / 3
-                        }
-
-                        drawText(label, 8f, textY, textPaint)
-                    }
-                }
+                dateTime
+            } catch (e: Exception) {
+                null
             }
         }
+    }
+
+    if (times.isEmpty()) return listOf("", "", "", "", "")
+
+    // 5 positions: start (0%), 1st quarter (25%), half (50%), 3rd quarter (75%), end (100%)
+    val indices = listOf(0, times.size / 4, times.size / 2, times.size * 3 / 4, times.size - 1)
+    return indices.map { idx ->
+        times.getOrNull(idx.coerceIn(0, times.size - 1))?.format(timeFormatter) ?: ""
     }
 }
 

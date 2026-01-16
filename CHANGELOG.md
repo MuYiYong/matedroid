@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Drive Details**: Charts now use optimized rendering with data downsampling (LTTB algorithm) for smooth scrolling on long trips
+- **Drive Details**: Charts now display time labels on X-axis (start, 1st quarter, half, 3rd quarter, end)
+- **Drive Details**: Charts Y-axis now shows 4 labels at quarter intervals (25%, 50%, 75%, 100%)
+- **Charge Details**: Charts now use optimized rendering with data downsampling (LTTB algorithm) for smooth scrolling on long charging sessions
+- **Charge Details**: Charts X-axis now shows 5 time labels (start, 1st quarter, half, 3rd quarter, end)
+- **Charge Details**: Charts Y-axis now shows 4 labels at quarter intervals (25%, 50%, 75%, 100%)
+
 ### Added
 - **Drive Details**: Weather Along the Way - shows historical weather conditions along your drive route
   - Uses Open-Meteo API to fetch historical weather data for points along the route
