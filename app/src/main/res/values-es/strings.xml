@@ -46,10 +46,16 @@
     <string name="unlocked">Desbloqueado</string>
 
     <!-- Content description when car is plugged in but not charging -->
-    <string name="plugged_in">Conectado</string>
+    <string name="plugged_in">Enchufado</string>
 
     <!-- Vehicle state shown when driving -->
     <string name="driving">Conduciendo</string>
+
+    <!-- Vehicle state shown when charging -->
+    <string name="charging">Cargando</string>
+
+    <!-- Vehicle state shown when online -->
+    <string name="online">En línea</string>
 
     <!-- Content description when sentry mode is active -->
     <string name="sentry_mode_active">Modo centinela activo</string>

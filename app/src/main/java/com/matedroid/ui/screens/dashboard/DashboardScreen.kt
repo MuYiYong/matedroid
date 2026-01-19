@@ -725,6 +725,8 @@ private fun StatusIndicatorsRow(
     val isSentryModeActive = status.sentryMode == true
     val isClimateOn = status.isClimateOn == true
     val isOnline = status.state?.lowercase() == "online"
+    val isCharging = status.state?.lowercase() == "charging"
+    val isAwake = isOnline || isCharging
     val isAsleep = status.state?.lowercase() in listOf("asleep", "suspended")
     val isLocked = status.locked == true
 
@@ -741,20 +743,25 @@ private fun StatusIndicatorsRow(
             ) {
                 // State icon - bedtime when asleep, power icon otherwise
                 val yesterdayStr = stringResource(R.string.yesterday)
-                val stateTooltip = if (isAsleep) {
-                    val sleepTime = formatTimeFromTimestamp(status.stateSince, yesterdayStr)
-                    if (sleepTime != null) {
-                        stringResource(R.string.asleep_since, sleepTime)
-                    } else {
-                        status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
+                val chargingStr = stringResource(R.string.charging)
+                val onlineStr = stringResource(R.string.online)
+                val stateTooltip = when {
+                    isAsleep -> {
+                        val sleepTime = formatTimeFromTimestamp(status.stateSince, yesterdayStr)
+                        if (sleepTime != null) {
+                            stringResource(R.string.asleep_since, sleepTime)
+                        } else {
+                            status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
+                        }
                     }
-                } else {
-                    status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
+                    isCharging -> chargingStr
+                    isOnline -> onlineStr
+                    else -> status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
                 }
                 StatusIcon(
                     icon = if (isAsleep) Icons.Filled.Bedtime else Icons.Filled.PowerSettingsNew,
                     tooltipText = stateTooltip,
-                    tint = if (isOnline) StatusSuccess else palette.onSurfaceVariant
+                    tint = if (isAwake) StatusSuccess else palette.onSurfaceVariant
                 )
 
                 // Lock icon - grey when locked, light red when unlocked

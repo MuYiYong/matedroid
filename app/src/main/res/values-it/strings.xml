@@ -40,16 +40,22 @@
     <string name="error_loading_data">Errore nel caricamento dati</string>
 
     <!-- Vehicle state shown when locked -->
-    <string name="locked">Bloccato</string>
+    <string name="locked">Chiusa</string>
 
     <!-- Vehicle state shown when unlocked -->
-    <string name="unlocked">Sbloccato</string>
+    <string name="unlocked">Aperta</string>
 
     <!-- Content description when car is plugged in but not charging -->
     <string name="plugged_in">Collegato</string>
 
     <!-- Vehicle state shown when driving -->
     <string name="driving">In guida</string>
+
+    <!-- Vehicle state shown when charging -->
+    <string name="charging">In carica</string>
+
+    <!-- Vehicle state shown when online -->
+    <string name="online">Online</string>
 
     <!-- Content description when sentry mode is active -->
     <string name="sentry_mode_active">Modalità sentinella attiva</string>

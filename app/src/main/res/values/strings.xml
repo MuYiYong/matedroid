@@ -51,6 +51,12 @@
     <!-- Vehicle state shown when driving -->
     <string name="driving">Driving</string>
 
+    <!-- Vehicle state shown when charging -->
+    <string name="charging">Charging</string>
+
+    <!-- Vehicle state shown when online -->
+    <string name="online">Online</string>
+
     <!-- Content description when sentry mode is active -->
     <string name="sentry_mode_active">Sentry mode active</string>
 

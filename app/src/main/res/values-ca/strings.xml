@@ -46,10 +46,16 @@
     <string name="unlocked">Desbloquejat</string>
 
     <!-- Content description when car is plugged in but not charging -->
-    <string name="plugged_in">Connectat</string>
+    <string name="plugged_in">Endollat</string>
 
     <!-- Vehicle state shown when driving -->
     <string name="driving">Conduint</string>
+
+    <!-- Vehicle state shown when charging -->
+    <string name="charging">Carregant</string>
+
+    <!-- Vehicle state shown when online -->
+    <string name="online">En línia</string>
 
     <!-- Content description when sentry mode is active -->
     <string name="sentry_mode_active">Mode sentinella actiu</string>
