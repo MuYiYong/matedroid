@@ -44,6 +44,8 @@ Create `fastlane/metadata/android/en-US/changelogs/{versionCode}.txt` with the r
 
 Format (max 500 chars for Play Store):
 ```
+More human readable and engaging new features and major fixes overview. Do NOT mention external contributors here.
+
 Added:
 - Feature 1
 - Feature 2
@@ -55,7 +57,7 @@ Fixed:
 - Fix 1
 ```
 
-Keep it concise - this appears in Play Store and F-Droid.
+Keep it concise - this appears in Play Store and F-Droid. Make the opening text engaging without it being too verbose or showy.
 
 ### 5. Commit and Tag
 
@@ -74,7 +76,8 @@ git push origin vX.Y.Z
 
 ### 7. Create GitHub Release
 
-Use `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file -` with the changelog content.
+Use `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file -` with the changelog content as the one in Fastlane.
+Mention external contributors, highlighting new ones and giving credit. 
 
 The GitHub Actions workflow will automatically:
 - Build APK and AAB
