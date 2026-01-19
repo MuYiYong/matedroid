@@ -726,7 +726,8 @@ private fun StatusIndicatorsRow(
     val isClimateOn = status.isClimateOn == true
     val isOnline = status.state?.lowercase() == "online"
     val isCharging = status.state?.lowercase() == "charging"
-    val isAwake = isOnline || isCharging
+    val isDriving = status.state?.lowercase() == "driving"
+    val isAwake = isOnline || isCharging || isDriving
     val isAsleep = status.state?.lowercase() in listOf("asleep", "suspended")
     val isLocked = status.locked == true
 
@@ -745,6 +746,7 @@ private fun StatusIndicatorsRow(
                 val yesterdayStr = stringResource(R.string.yesterday)
                 val chargingStr = stringResource(R.string.charging)
                 val onlineStr = stringResource(R.string.online)
+                val drivingStr = stringResource(R.string.driving)
                 val stateTooltip = when {
                     isAsleep -> {
                         val sleepTime = formatTimeFromTimestamp(status.stateSince, yesterdayStr)
@@ -755,11 +757,16 @@ private fun StatusIndicatorsRow(
                         }
                     }
                     isCharging -> chargingStr
+                    isDriving -> drivingStr
                     isOnline -> onlineStr
                     else -> status.state?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
                 }
                 StatusIcon(
-                    icon = if (isAsleep) Icons.Filled.Bedtime else Icons.Filled.PowerSettingsNew,
+                    icon = when {
+                        isAsleep -> Icons.Filled.Bedtime
+                        isDriving -> CustomIcons.SteeringWheel
+                        else -> Icons.Filled.PowerSettingsNew
+                    },
                     tooltipText = stateTooltip,
                     tint = if (isAwake) StatusSuccess else palette.onSurfaceVariant
                 )
