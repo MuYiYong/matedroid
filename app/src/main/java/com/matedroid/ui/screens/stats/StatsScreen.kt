@@ -234,6 +234,7 @@ fun StatsScreen(
                     availableYears = uiState.availableYears,
                     selectedYearFilter = uiState.selectedYearFilter,
                     deepSyncProgress = uiState.deepSyncProgress,
+                    isSyncing = uiState.isSyncing,
                     geocodeProgress = uiState.geocodeProgress,
                     isGeocoding = uiState.isGeocoding,
                     palette = palette,
@@ -338,6 +339,7 @@ private fun StatsContent(
     availableYears: List<Int>,
     selectedYearFilter: YearFilter,
     deepSyncProgress: Float,
+    isSyncing: Boolean,
     geocodeProgress: GeocodeProgressInfo?,
     isGeocoding: Boolean,
     palette: CarColorPalette,
@@ -366,8 +368,8 @@ private fun StatsContent(
             )
         }
 
-        // Sync progress indicator if deep sync is ongoing
-        if (deepSyncProgress < 1f && deepSyncProgress > 0f) {
+        // Sync progress indicator if deep sync is actively running
+        if (isSyncing && deepSyncProgress < 1f && deepSyncProgress > 0f) {
             item {
                 SyncProgressCard(
                     progress = deepSyncProgress,
