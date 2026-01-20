@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-01-20
+
+### Added
+- **Dashboard**: Remember last selected car for users with multiple vehicles
+- **Settings**: "Report an issue" link below version number opens GitHub issues page
+- **Error Handling**: "Show details" button on API errors displays diagnostic information for troubleshooting
+
+### Changed
+- **Build**: Updated Hilt from 2.53.1 to 2.56
+
+### Fixed
+- **Tests**: Resolved memory consumption issues in unit tests
+
 ## [0.11.2] - 2026-01-19
 
 ### Fixed
@@ -253,7 +266,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v0.11.3...HEAD
+[0.11.3]: https://github.com/vide/matedroid/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/vide/matedroid/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/vide/matedroid/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/vide/matedroid/compare/v0.10.0...v0.11.0
