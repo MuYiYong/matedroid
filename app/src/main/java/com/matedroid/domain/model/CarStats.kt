@@ -222,5 +222,8 @@ data class CountryRecord(
     val flagEmoji: String,          // Flag emoji (e.g., "🇮🇹", "🇺🇸")
     val firstVisitDate: String,     // ISO date of first drive
     val lastVisitDate: String,      // ISO date of most recent drive
-    val driveCount: Int             // Number of drives in this country
+    val driveCount: Int,            // Number of drives in this country
+    val totalDistanceKm: Double,    // Total km driven (approx, from drives starting in this country)
+    val totalChargeEnergyKwh: Double, // Total kWh charged in this country
+    val chargeCount: Int            // Number of charges in this country
 )

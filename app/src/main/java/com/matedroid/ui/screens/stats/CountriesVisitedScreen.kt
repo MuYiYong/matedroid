@@ -189,79 +189,137 @@ private fun CountryCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
-            // Flag emoji
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(palette.accentDim),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = country.flagEmoji,
-                    fontSize = 32.sp
-                )
+                // Flag emoji
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(palette.accentDim),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = country.flagEmoji,
+                        fontSize = 32.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Country info
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = country.countryName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = stringResource(
+                            R.string.country_first_visit,
+                            formatDate(country.firstVisitDate)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.country_last_visit,
+                            formatDate(country.lastVisitDate)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.onSurfaceVariant
+                    )
+                }
+
+                // Drive count
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = country.driveCount.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.accent
+                    )
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.drives_count,
+                            country.driveCount,
+                            country.driveCount
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.onSurfaceVariant
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Country info
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = country.countryName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+            // Stats row with colorful icons
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // Distance
+                StatItem(
+                    emoji = "🛣️",
+                    value = "%.0f km".format(country.totalDistanceKm),
                     color = palette.onSurface
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = stringResource(
-                        R.string.country_first_visit,
-                        formatDate(country.firstVisitDate)
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = palette.onSurfaceVariant
+                // Charge energy
+                StatItem(
+                    emoji = "⚡",
+                    value = "%.1f kWh".format(country.totalChargeEnergyKwh),
+                    color = palette.onSurface
                 )
 
-                Text(
-                    text = stringResource(
-                        R.string.country_last_visit,
-                        formatDate(country.lastVisitDate)
+                // Charge count
+                StatItem(
+                    emoji = "🔌",
+                    value = pluralStringResource(
+                        R.plurals.charges_count,
+                        country.chargeCount,
+                        country.chargeCount
                     ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = palette.onSurfaceVariant
-                )
-            }
-
-            // Drive count
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Text(
-                    text = country.driveCount.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = palette.accent
-                )
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.drives_count,
-                        country.driveCount,
-                        country.driveCount
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = palette.onSurfaceVariant
+                    color = palette.onSurface
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StatItem(
+    emoji: String,
+    value: String,
+    color: androidx.compose.ui.graphics.Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = emoji,
+            fontSize = 16.sp
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color
+        )
     }
 }
 

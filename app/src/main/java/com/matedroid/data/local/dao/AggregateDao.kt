@@ -352,29 +352,66 @@ interface AggregateDao {
     """)
     suspend fun countUniqueCountriesInRange(carId: Int, startDate: String, endDate: String): Int
 
-    // Get countries visited with aggregated data
+    // Get countries visited with aggregated data (drives + charges)
     @Query("""
-        SELECT a.startCountryCode as countryCode, a.startCountryName as countryName,
-               MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
-               COUNT(*) as driveCount
-        FROM drive_detail_aggregates a
-        JOIN drives_summary d ON a.driveId = d.driveId
-        WHERE a.carId = :carId AND a.startCountryCode IS NOT NULL
-        GROUP BY a.startCountryCode
-        ORDER BY firstVisitDate ASC
+        SELECT
+            drive_stats.countryCode,
+            drive_stats.countryName,
+            drive_stats.firstVisitDate,
+            drive_stats.lastVisitDate,
+            drive_stats.driveCount,
+            drive_stats.totalDistanceKm,
+            COALESCE(charge_stats.totalChargeEnergyKwh, 0.0) as totalChargeEnergyKwh,
+            COALESCE(charge_stats.chargeCount, 0) as chargeCount
+        FROM (
+            SELECT a.startCountryCode as countryCode, a.startCountryName as countryName,
+                   MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
+                   COUNT(*) as driveCount, SUM(d.distance) as totalDistanceKm
+            FROM drive_detail_aggregates a
+            JOIN drives_summary d ON a.driveId = d.driveId
+            WHERE a.carId = :carId AND a.startCountryCode IS NOT NULL
+            GROUP BY a.startCountryCode
+        ) drive_stats
+        LEFT JOIN (
+            SELECT ca.countryCode, SUM(cs.energyAdded) as totalChargeEnergyKwh, COUNT(*) as chargeCount
+            FROM charge_detail_aggregates ca
+            JOIN charges_summary cs ON ca.chargeId = cs.chargeId
+            WHERE ca.carId = :carId AND ca.countryCode IS NOT NULL
+            GROUP BY ca.countryCode
+        ) charge_stats ON drive_stats.countryCode = charge_stats.countryCode
+        ORDER BY drive_stats.firstVisitDate ASC
     """)
     suspend fun getCountriesVisited(carId: Int): List<CountryVisitResult>
 
     @Query("""
-        SELECT a.startCountryCode as countryCode, a.startCountryName as countryName,
-               MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
-               COUNT(*) as driveCount
-        FROM drive_detail_aggregates a
-        JOIN drives_summary d ON a.driveId = d.driveId
-        WHERE a.carId = :carId AND a.startCountryCode IS NOT NULL
-        AND d.startDate >= :startDate AND d.startDate < :endDate
-        GROUP BY a.startCountryCode
-        ORDER BY firstVisitDate ASC
+        SELECT
+            drive_stats.countryCode,
+            drive_stats.countryName,
+            drive_stats.firstVisitDate,
+            drive_stats.lastVisitDate,
+            drive_stats.driveCount,
+            drive_stats.totalDistanceKm,
+            COALESCE(charge_stats.totalChargeEnergyKwh, 0.0) as totalChargeEnergyKwh,
+            COALESCE(charge_stats.chargeCount, 0) as chargeCount
+        FROM (
+            SELECT a.startCountryCode as countryCode, a.startCountryName as countryName,
+                   MIN(d.startDate) as firstVisitDate, MAX(d.startDate) as lastVisitDate,
+                   COUNT(*) as driveCount, SUM(d.distance) as totalDistanceKm
+            FROM drive_detail_aggregates a
+            JOIN drives_summary d ON a.driveId = d.driveId
+            WHERE a.carId = :carId AND a.startCountryCode IS NOT NULL
+            AND d.startDate >= :startDate AND d.startDate < :endDate
+            GROUP BY a.startCountryCode
+        ) drive_stats
+        LEFT JOIN (
+            SELECT ca.countryCode, SUM(cs.energyAdded) as totalChargeEnergyKwh, COUNT(*) as chargeCount
+            FROM charge_detail_aggregates ca
+            JOIN charges_summary cs ON ca.chargeId = cs.chargeId
+            WHERE ca.carId = :carId AND ca.countryCode IS NOT NULL
+            AND cs.startDate >= :startDate AND cs.startDate < :endDate
+            GROUP BY ca.countryCode
+        ) charge_stats ON drive_stats.countryCode = charge_stats.countryCode
+        ORDER BY drive_stats.firstVisitDate ASC
     """)
     suspend fun getCountriesVisitedInRange(carId: Int, startDate: String, endDate: String): List<CountryVisitResult>
 
@@ -541,7 +578,10 @@ data class CountryVisitResult(
     val countryName: String,
     val firstVisitDate: String,
     val lastVisitDate: String,
-    val driveCount: Int
+    val driveCount: Int,
+    val totalDistanceKm: Double,
+    val totalChargeEnergyKwh: Double,
+    val chargeCount: Int
 )
 
 /**

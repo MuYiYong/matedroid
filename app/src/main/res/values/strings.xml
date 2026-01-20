@@ -717,6 +717,12 @@
         <item quantity="other">drives</item>
     </plurals>
 
+    <!-- Plural for number of charges in a country -->
+    <plurals name="charges_count">
+        <item quantity="one">%d charge</item>
+        <item quantity="other">%d charges</item>
+    </plurals>
+
     <!-- Sort option: sort by first visit date -->
     <string name="sort_by_first_visit">By first visit</string>
 

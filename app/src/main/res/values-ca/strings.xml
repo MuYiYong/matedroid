@@ -717,6 +717,12 @@
         <item quantity="other">%d viatges</item>
     </plurals>
 
+    <!-- Plural for number of charges in a country -->
+    <plurals name="charges_count">
+        <item quantity="one">%d càrrega</item>
+        <item quantity="other">%d càrregues</item>
+    </plurals>
+
     <!-- Sort option: by first visit date (chronological) -->
     <string name="sort_by_first_visit">Per primera visita</string>
 

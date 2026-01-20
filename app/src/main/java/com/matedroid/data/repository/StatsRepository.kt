@@ -562,7 +562,10 @@ private fun com.matedroid.data.local.dao.CountryVisitResult.toCountryRecord() = 
     flagEmoji = countryCodeToFlag(countryCode),
     firstVisitDate = firstVisitDate,
     lastVisitDate = lastVisitDate,
-    driveCount = driveCount
+    driveCount = driveCount,
+    totalDistanceKm = totalDistanceKm,
+    totalChargeEnergyKwh = totalChargeEnergyKwh,
+    chargeCount = chargeCount
 )
 
 private fun com.matedroid.domain.model.SyncPhase.isProcessing(): Boolean {
