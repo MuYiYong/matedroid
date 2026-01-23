@@ -732,11 +732,36 @@
     <!-- Sort option: by number of drives -->
     <string name="sort_by_drive_count">Por viajes</string>
 
+    <!-- Sort option: sort by total distance -->
+    <string name="sort_by_distance">Por distancia</string>
+
+    <!-- Sort option: sort by total energy charged -->
+    <string name="sort_by_energy">Por energía</string>
+
+    <!-- Sort option: sort by number of charges -->
+    <string name="sort_by_charges">Por cargas</string>
+
     <!-- Empty state when no countries have been recorded yet -->
     <string name="no_countries_found">No hay países registrados aún…</string>
 
     <!-- Label for sort dropdown/menu -->
     <string name="sort">Ordenar</string>
+
+    <!-- ==================== Regions Visited Screen ==================== -->
+    <!-- Top bar title for regions visited screen. %s is the country name -->
+    <string name="regions_visited_title">Regiones en %s</string>
+
+    <!-- Plural for number of regions. %d is the count -->
+    <plurals name="format_regions_count">
+        <item quantity="one">%d región</item>
+        <item quantity="other">%d regiones</item>
+    </plurals>
+
+    <!-- Empty state when no regions have been recorded -->
+    <string name="no_regions_found">No hay regiones registradas.</string>
+
+    <!-- Header card title showing country totals -->
+    <string name="regions_country_summary">Resumen del País</string>
 
     <!-- ==================== Mileage Screen ==================== -->
     <!-- Top bar title for mileage screen -->
