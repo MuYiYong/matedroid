@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Duration Format**: Standardized duration display to "H:MM" format across drives and charges screens (fixes #104)
+
 ### Fixed
 - **Drive Details**: Date/time now displays in proper locale format instead of mixed languages (fixes #103)
 - **Battery Health**: Fixed duplicate % symbol in "Loss (%)" label for ES/IT/CA locales (fixes #102)
