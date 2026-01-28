@@ -21,6 +21,8 @@ If no argument is provided, ask the user for the issue number.
 
 ### 1. Read the Issue
 
+The repository is called `matedroid` and it is owned by `vide`.
+
 Use `mcp__github__issue_read` to get the issue details:
 - Issue title and description
 - Any existing comments
