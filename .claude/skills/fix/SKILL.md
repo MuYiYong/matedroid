@@ -56,6 +56,8 @@ Edit the necessary files to fix the issue. Follow these principles:
 - Add comments only where the logic isn't self-evident
 - All code comments MUST be in English
 
+At the end of the fixing process, ALWAYS update the CHANGELOG.md file with a short description of the fix and the related issue number.
+
 ### 5. Run Tests Locally
 
 Run the test suite to verify the fix doesn't break anything:
