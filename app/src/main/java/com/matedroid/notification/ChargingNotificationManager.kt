@@ -164,6 +164,7 @@ class ChargingNotificationManager @Inject constructor(
 
     /**
      * Build Android 16+ ProgressStyle notification with visual battery progress bar.
+     * Uses NotificationCompat APIs (matching official Android sample).
      */
     @RequiresApi(36)
     private fun buildProgressStyleNotification(
@@ -173,41 +174,48 @@ class ChargingNotificationManager @Inject constructor(
         batteryLevel: Int,
         chargeLimit: Int
     ): Notification {
-        // Get car palette accent color for target marker
+        // Get car palette accent color
         val palette = CarColorPalettes.forExteriorColor(
             car.carExterior?.exteriorColor,
             darkTheme = false  // Use light theme colors for notification
         )
 
-        // Load car image (semi-transparent for background)
+        // Load car image
         val carBitmap = loadCarImage(car)
 
-        // Use two segments to create a visible vertical bar at the charge limit boundary.
-        // The gap between segments renders as a thin vertical separator line.
         val accentArgb = palette.accent.toArgb()
+        val grayArgb = android.graphics.Color.argb(80, 128, 128, 128)
+
+        // Clamp values to safe ranges
+        val soc = batteryLevel.coerceIn(0, 100)
+        val limit = chargeLimit.coerceIn(soc, 100)
+
+        Log.d(TAG, "ProgressStyle: soc=$soc, limit=$limit (segments: $soc, ${limit - soc}, ${100 - limit})")
+
+        // 3 segments: charged (accent, bright) | charging-to-limit (accent, dimmed) | beyond limit (gray, dimmed)
+        val segments = listOfNotNull(
+            if (soc > 0) Notification.ProgressStyle.Segment(soc).setColor(accentArgb) else null,
+            if (limit - soc > 0) Notification.ProgressStyle.Segment(limit - soc).setColor(accentArgb) else null,
+            if (100 - limit > 0) Notification.ProgressStyle.Segment(100 - limit).setColor(grayArgb) else null,
+        )
+
         val progressStyle = Notification.ProgressStyle()
-            .setProgress(batteryLevel)
+            .setProgress(soc)
             .setStyledByProgress(true)
             .setProgressTrackerIcon(
                 android.graphics.drawable.Icon.createWithResource(context, R.drawable.ic_bolt)
             )
-            .setProgressSegments(
-                listOf(
-                    Notification.ProgressStyle.Segment(chargeLimit)
-                        .setColor(accentArgb),
-                    Notification.ProgressStyle.Segment(100 - chargeLimit)
-                        .setColor(accentArgb)
-                )
-            )
+            .setProgressSegments(segments)
 
         val builder = Notification.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_notification)
+            .setProgress(100, soc, false)
             .setStyle(progressStyle)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setVisibility(Notification.VISIBILITY_PUBLIC)  // Show on lock screen
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(createContentIntent(car.carId))
 
         // Add car image as large icon if available
@@ -216,7 +224,6 @@ class ChargingNotificationManager @Inject constructor(
         }
 
         // Request promoted ongoing status (Live Update)
-        // Use literal string since the constant is only available in API 36+
         builder.extras.putBoolean("android.requestPromotedOngoing", true)
 
         return builder.build()
