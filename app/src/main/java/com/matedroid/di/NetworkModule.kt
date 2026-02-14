@@ -177,7 +177,7 @@ class TeslamateApiFactory(
                 }
                 chain.proceed(request)
             }
-            .connectTimeout(1, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
 

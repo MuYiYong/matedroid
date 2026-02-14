@@ -1,7 +1,14 @@
 package com.matedroid.di
 
 import android.content.Context
+import com.matedroid.BuildConfig
 import com.matedroid.data.local.SettingsDataStore
+import com.matedroid.data.push.AospPushService
+import com.matedroid.data.push.GmsPushService
+import com.matedroid.data.push.HmsPushService
+import com.matedroid.domain.model.MobileServicesStack
+import com.matedroid.domain.model.MobileServicesProfile
+import com.matedroid.domain.service.PushService
 import com.matedroid.notification.ChargingNotificationManager
 import dagger.Module
 import dagger.Provides
@@ -28,5 +35,27 @@ object AppModule {
         @ApplicationContext context: Context
     ): ChargingNotificationManager {
         return ChargingNotificationManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMobileServicesProfile(): MobileServicesProfile {
+        return MobileServicesProfile.from(
+            channelRaw = BuildConfig.DISTRIBUTION_CHANNEL,
+            stackRaw = BuildConfig.MOBILE_SERVICES_STACK
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePushService(
+        @ApplicationContext context: Context,
+        profile: MobileServicesProfile
+    ): PushService {
+        return when (profile.stack) {
+            MobileServicesStack.GMS -> GmsPushService(context)
+            MobileServicesStack.HMS -> HmsPushService(context)
+            MobileServicesStack.AOSP -> AospPushService(context)
+        }
     }
 }

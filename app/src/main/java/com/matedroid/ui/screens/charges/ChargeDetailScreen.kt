@@ -60,16 +60,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.amap.api.maps.CameraUpdateFactory
-import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.MarkerOptions
+import com.matedroid.BuildConfig
 import com.matedroid.R
 import com.matedroid.data.api.models.ChargeDetail
 import com.matedroid.data.api.models.ChargePoint
 import com.matedroid.data.api.models.Units
 import com.matedroid.domain.model.UnitFormatter
 import com.matedroid.domain.model.wgs84ToGcj02
-import com.matedroid.ui.components.AmapViewContainer
+import com.matedroid.ui.components.StaticMapSnapshot
+import com.matedroid.ui.components.buildAmapStaticMarkerUrl
 import com.matedroid.ui.components.FullscreenLineChart
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -524,20 +523,23 @@ private fun ChargeMapCard(latitude: Double, longitude: Double) {
                     .height(160.dp)
                     .clip(RoundedCornerShape(8.dp))
             ) {
-                AmapViewContainer(
+                val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
+                val staticMapKey = BuildConfig.AMAP_WEB_API_KEY.ifBlank { BuildConfig.AMAP_API_KEY }
+                val staticMapUrl = remember(gcjLat, gcjLon, staticMapKey) {
+                    buildAmapStaticMarkerUrl(
+                        gcjLatitude = gcjLat,
+                        gcjLongitude = gcjLon,
+                        apiKey = staticMapKey,
+                        width = 640,
+                        height = 320,
+                        zoom = 16
+                    )
+                }
+
+                StaticMapSnapshot(
                     modifier = Modifier.fillMaxSize(),
-                    updateKey = "${latitude},${longitude}",
-                    onMapUpdate = { map ->
-                        val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
-                        val location = LatLng(gcjLat, gcjLon)
-                        map.clear()
-                        map.addMarker(
-                            MarkerOptions()
-                                .position(location)
-                                .title(chargeLocationMarker)
-                        )
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16f))
-                    }
+                    staticMapUrl = staticMapUrl,
+                    onClick = { openInMaps() }
                 )
             }
         }

@@ -47,10 +47,6 @@ fun AmapViewContainer(
             override fun onPause(owner: LifecycleOwner) {
                 mapView.onPause()
             }
-
-            override fun onDestroy(owner: LifecycleOwner) {
-                mapView.onDestroy()
-            }
         }
 
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -62,6 +58,8 @@ fun AmapViewContainer(
 
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onPause()
+            mapView.onDestroy()
         }
     }
 

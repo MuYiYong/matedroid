@@ -68,16 +68,18 @@ import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.LatLngBounds
 import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.maps.model.PolygonOptions
+import com.matedroid.BuildConfig
 import com.matedroid.R
 import com.matedroid.data.repository.CountryBoundary
 import com.matedroid.domain.model.ChargeLocation
 import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.DriveLocation
 import com.matedroid.domain.model.RegionRecord
+import com.matedroid.ui.components.StaticMapSnapshot
+import com.matedroid.ui.components.buildAmapStaticMarkerUrl
 import com.matedroid.domain.model.YearFilter
 import com.matedroid.domain.model.wgs84ToGcj02
 import com.matedroid.ui.icons.CustomIcons
-import com.matedroid.ui.components.AmapViewContainer
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
@@ -564,85 +566,30 @@ private fun CountryMapCard(
                     .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
-                AmapViewContainer(
-                    modifier = Modifier.fillMaxSize(),
-                    updateKey = mapUpdateKey,
-                    onMapUpdate = { map ->
-                        map.clear()
-
-                        countryBoundary?.let { boundary ->
-                            boundary.polygons.forEach { ring ->
-                                if (ring.size >= 3) {
-                                    map.addPolygon(
-                                        PolygonOptions()
-                                            .addAll(ring.map { (lat, lon) -> LatLng(lat, lon) })
-                                            .strokeColor(acColorArgb)
-                                            .strokeWidth(3f)
-                                            .fillColor(
-                                                android.graphics.Color.argb(
-                                                    25,
-                                                    android.graphics.Color.red(acColorArgb),
-                                                    android.graphics.Color.green(acColorArgb),
-                                                    android.graphics.Color.blue(acColorArgb)
-                                                )
-                                            )
-                                    )
-                                }
-                            }
-                        }
-
-                        val boundsBuilder = LatLngBounds.builder()
-                        var hasPoints = false
-
-                        when (mapViewMode) {
-                            MapViewMode.CHARGES -> {
-                                chargeLocations.forEach { charge ->
-                                    val (gcjLat, gcjLon) = wgs84ToGcj02(charge.latitude, charge.longitude)
-                                    val point = LatLng(gcjLat, gcjLon)
-                                    hasPoints = true
-                                    boundsBuilder.include(point)
-
-                                    val hue = if (charge.isDcCharge) {
-                                        BitmapDescriptorFactory.HUE_ORANGE
-                                    } else {
-                                        BitmapDescriptorFactory.HUE_GREEN
-                                    }
-
-                                    map.addMarker(
-                                        MarkerOptions()
-                                            .position(point)
-                                            .title(charge.address)
-                                            .snippet("%.1f kWh".format(charge.energyAddedKwh))
-                                            .icon(BitmapDescriptorFactory.defaultMarker(hue))
-                                    )
-                                }
-                            }
-
-                            MapViewMode.DRIVES -> {
-                                driveLocations.forEach { drive ->
-                                    val (gcjLat, gcjLon) = wgs84ToGcj02(drive.latitude, drive.longitude)
-                                    val point = LatLng(gcjLat, gcjLon)
-                                    hasPoints = true
-                                    boundsBuilder.include(point)
-
-                                    map.addMarker(
-                                        MarkerOptions()
-                                            .position(point)
-                                            .title(drive.address)
-                                            .snippet("%,.1f km".format(drive.distanceKm))
-                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                                    )
-                                }
-                            }
-                        }
-
-                        if (!hasInitialZoom && hasPoints) {
-                            map.moveCamera(
-                                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 60)
-                            )
-                            hasInitialZoom = true
-                        }
+                val representative = remember(mapUpdateKey) {
+                    when (mapViewMode) {
+                        MapViewMode.CHARGES -> chargeLocations.firstOrNull()?.let { it.latitude to it.longitude }
+                        MapViewMode.DRIVES -> driveLocations.firstOrNull()?.let { it.latitude to it.longitude }
                     }
+                }
+                val staticMapKey = BuildConfig.AMAP_WEB_API_KEY.ifBlank { BuildConfig.AMAP_API_KEY }
+                val staticMapUrl = remember(representative, staticMapKey) {
+                    representative?.let { (lat, lon) ->
+                        val (gcjLat, gcjLon) = wgs84ToGcj02(lat, lon)
+                        buildAmapStaticMarkerUrl(
+                            gcjLatitude = gcjLat,
+                            gcjLongitude = gcjLon,
+                            apiKey = staticMapKey,
+                            width = 720,
+                            height = 460,
+                            zoom = 6
+                        )
+                    }
+                }
+
+                StaticMapSnapshot(
+                    modifier = Modifier.fillMaxSize(),
+                    staticMapUrl = staticMapUrl
                 )
 
                 // Legend overlay at bottom-left
