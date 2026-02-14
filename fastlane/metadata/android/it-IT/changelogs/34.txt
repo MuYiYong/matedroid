@@ -1,0 +1,13 @@
+MateDroid 1.2.0 migliora la stabilità ed estende il supporto agli store.
+
+Added:
+- Flavor multi-market: Play, Huawei, Honor, Xiaomi, Oppo, Samsung, F-Droid
+- Scaffold push per stack con percorso HMS per Huawei/Honor
+
+Changed:
+- Snapshot mappa statica nelle schermate principali per release più stabili
+- Nuovi comandi build per AAB Play e APK per market
+
+Fixed:
+- Le mappe percorso ora mostrano la polilinea completa con punti intermedi
+- Meno timeout API su reti lente

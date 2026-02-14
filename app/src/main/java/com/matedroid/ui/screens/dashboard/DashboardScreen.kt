@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
@@ -110,13 +111,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.amap.api.maps.CameraUpdateFactory
-import com.amap.api.maps.model.BitmapDescriptorFactory
-import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.MarkerOptions
+import com.matedroid.BuildConfig
 import com.matedroid.R
 import com.matedroid.data.local.CarImageOverride
-import com.matedroid.ui.components.AmapViewContainer
+import com.matedroid.ui.components.StaticMapSnapshot
+import com.matedroid.ui.components.buildAmapStaticMarkerUrl
 import com.matedroid.ui.components.CarImagePickerDialog
 import com.matedroid.data.api.models.BatteryDetails
 import com.matedroid.domain.model.wgs84ToGcj02
@@ -1604,35 +1603,26 @@ private fun SmallLocationMap(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier.clickable { onClick() }
-    ) {
-        AmapViewContainer(
-            modifier = Modifier.fillMaxSize(),
-            updateKey = "${latitude},${longitude}",
-            onMapReady = { map ->
-                map.uiSettings.apply {
-                    isZoomControlsEnabled = false
-                    isScrollGesturesEnabled = false
-                    isZoomGesturesEnabled = false
-                    isTiltGesturesEnabled = false
-                    isRotateGesturesEnabled = false
-                }
-            },
-            onMapUpdate = { map ->
-                val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
-                val carLocation = LatLng(gcjLat, gcjLon)
-                map.clear()
-                map.addMarker(
-                    MarkerOptions()
-                        .position(carLocation)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                )
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(carLocation, 15f))
-            }
+    val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
+    val staticMapKey = BuildConfig.AMAP_WEB_API_KEY.ifBlank { BuildConfig.AMAP_API_KEY }
+    val staticMapUrl = remember(gcjLat, gcjLon, staticMapKey) {
+        buildAmapStaticMarkerUrl(
+            gcjLatitude = gcjLat,
+            gcjLongitude = gcjLon,
+            apiKey = staticMapKey,
+            width = 336,
+            height = 176,
+            zoom = 14
         )
     }
+
+    StaticMapSnapshot(
+        modifier = modifier,
+        staticMapUrl = staticMapUrl,
+        onClick = onClick
+    )
 }
+
 @Composable
 private fun VehicleInfoCard(
     status: CarStatus,

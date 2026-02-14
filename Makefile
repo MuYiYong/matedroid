@@ -1,4 +1,4 @@
-.PHONY: build install run build-release install-release run-release clean test help mock-list
+.PHONY: build install run build-release install-release run-release build-play-bundle build-market-apks build-all-market-apks clean test help mock-list
 
 # Default target
 help:
@@ -9,6 +9,9 @@ help:
 	@echo "  build-release   - Build release APK"
 	@echo "  install-release - Build and install release APK on connected device"
 	@echo "  run-release     - Build, install, and launch the app (release)"
+	@echo "  build-play-bundle - Build Play Store AAB (playRelease)"
+	@echo "  build-market-apks - Build APKs for one market flavor (MARKET=...)"
+	@echo "  build-all-market-apks - Build APKs for all non-Play market flavors"
 	@echo "  clean           - Clean build artifacts"
 	@echo "  test            - Run unit tests"
 	@echo "  mock-list       - List available mock server car profiles"
@@ -31,6 +34,23 @@ run: install
 # Build release APK
 build-release:
 	./gradlew assembleRelease
+
+# Build Play Store bundle (AAB)
+build-play-bundle:
+	./gradlew bundlePlayRelease
+
+# Build release APKs for one market flavor
+# Usage: make build-market-apks MARKET=huawei
+build-market-apks:
+ifndef MARKET
+	$(error MARKET is required. Example: make build-market-apks MARKET=huawei)
+endif
+	@market_cap=$$(printf '%s' "$(MARKET)" | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}'); \
+	./gradlew assemble$${market_cap}Release
+
+# Build release APKs for non-Play market flavors
+build-all-market-apks:
+	./gradlew assembleHuaweiRelease assembleHonorRelease assembleXiaomiRelease assembleOppoRelease assembleSamsungRelease assembleFdroidRelease
 
 # Build and install release APK on connected device
 install-release: build-release

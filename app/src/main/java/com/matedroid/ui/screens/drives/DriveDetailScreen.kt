@@ -62,12 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.amap.api.maps.CameraUpdateFactory
-import com.amap.api.maps.model.BitmapDescriptorFactory
-import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.LatLngBounds
-import com.amap.api.maps.model.MarkerOptions
-import com.amap.api.maps.model.PolylineOptions
+import com.matedroid.BuildConfig
 import com.matedroid.R
 import com.matedroid.data.api.models.DriveDetail
 import com.matedroid.data.api.models.DrivePosition
@@ -75,7 +70,8 @@ import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.WeatherPoint
 import com.matedroid.domain.model.wgs84ToGcj02
 import com.matedroid.domain.model.UnitFormatter
-import com.matedroid.ui.components.AmapViewContainer
+import com.matedroid.ui.components.StaticMapSnapshot
+import com.matedroid.ui.components.buildAmapStaticPathUrl
 import com.matedroid.ui.components.FullscreenLineChart
 import com.matedroid.ui.theme.CarColorPalettes
 import java.time.LocalDateTime
@@ -409,7 +405,6 @@ private fun RouteHeaderCard(detail: DriveDetail) {
 @Composable
 private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
     val context = LocalContext.current
-    val routeColorArgb = routeColor.toArgb()
     val validPositions = positions.filter { it.latitude != null && it.longitude != null }
     val routeKey = buildString {
         append(validPositions.size)
@@ -462,42 +457,31 @@ private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
                     .height(190.dp)
                     .clip(RoundedCornerShape(8.dp))
             ) {
-                AmapViewContainer(
-                    modifier = Modifier.fillMaxSize(),
-                    updateKey = routeKey,
-                    onMapUpdate = { map ->
-                        val latLngs = validPositions.map {
-                            val (gcjLat, gcjLon) = wgs84ToGcj02(it.latitude!!, it.longitude!!)
-                            LatLng(gcjLat, gcjLon)
-                        }
-                        map.clear()
-
-                        if (latLngs.size >= 2) {
-                            map.addPolyline(
-                                PolylineOptions()
-                                    .addAll(latLngs)
-                                    .color(routeColorArgb)
-                                    .width(10f)
-                            )
-
-                            map.addMarker(
-                                MarkerOptions()
-                                    .position(latLngs.first())
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                            )
-                            map.addMarker(
-                                MarkerOptions()
-                                    .position(latLngs.last())
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                            )
-
-                            val boundsBuilder = LatLngBounds.builder()
-                            latLngs.forEach { boundsBuilder.include(it) }
-                            map.moveCamera(
-                                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 80)
-                            )
-                        }
+                val gcjRoutePoints = remember(routeKey) {
+                    validPositions.map {
+                        val (gcjLat, gcjLon) = wgs84ToGcj02(it.latitude!!, it.longitude!!)
+                        gcjLat to gcjLon
                     }
+                }
+                val staticMapKey = BuildConfig.AMAP_WEB_API_KEY.ifBlank { BuildConfig.AMAP_API_KEY }
+                val routeColorHex = remember(routeColor) {
+                    "0x%06X".format(0xFFFFFF and routeColor.toArgb())
+                }
+                val staticMapUrl = remember(routeKey, staticMapKey, routeColorHex) {
+                    buildAmapStaticPathUrl(
+                        gcjPoints = gcjRoutePoints,
+                        apiKey = staticMapKey,
+                        width = 640,
+                        height = 380,
+                        colorHex = routeColorHex,
+                        weight = 6
+                    )
+                }
+
+                StaticMapSnapshot(
+                    modifier = Modifier.fillMaxSize(),
+                    staticMapUrl = staticMapUrl,
+                    onClick = { openInMaps() }
                 )
             }
         }

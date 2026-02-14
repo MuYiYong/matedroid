@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-14
+
+### Added
+- **Distribution**: Added multi-market product flavors for Play, Huawei, Honor, Xiaomi, Oppo, Samsung, and F-Droid, with per-flavor distribution channel and mobile services profile wiring.
+- **Push Scaffold**: Added stack-aware push service abstraction (`GMS` / `HMS` / `AOSP`) and startup initialization path, including HMS push integration scaffold for Huawei/Honor builds.
+- **Build Tooling**: Added new Make targets and docs for Play AAB output and market-specific release APK builds.
+
+### Changed
+- **Maps**: Replaced embedded dynamic map views with static map snapshots in key route/location screens to improve release stability on devices affected by map native crashes.
+- **Build Outputs**: Enabled ABI split packaging for release variants (`arm64-v8a`, `armeabi-v7a`, plus universal APK).
+
+### Fixed
+- **Drives**: Fixed static route rendering to correctly display full route polyline and mid-route points.
+- **Network**: Increased API connect timeout to reduce intermittent startup/data loading failures on slower networks.
+
 ## [1.1.0] - 2026-02-14
 
 ### Added
@@ -396,7 +411,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard with basic vehicle status
 - Charges screen with history list
 
-[Unreleased]: https://github.com/vide/matedroid/compare/v1.1.0-beta3...HEAD
+[Unreleased]: https://github.com/vide/matedroid/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/vide/matedroid/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0
 [1.1.0-beta3]: https://github.com/vide/matedroid/compare/v1.1.0-beta2...v1.1.0-beta3
 [1.1.0-beta2]: https://github.com/vide/matedroid/compare/v1.1.0-beta1...v1.1.0-beta2
 [1.1.0-beta1]: https://github.com/vide/matedroid/compare/v1.0.0...v1.1.0-beta1

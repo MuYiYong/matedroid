@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit
 import com.matedroid.data.sync.ChargingNotificationWorker
 import com.matedroid.data.sync.DataSyncWorker
 import com.matedroid.data.sync.TpmsPressureWorker
+import com.matedroid.domain.model.MobileServicesProfile
+import com.matedroid.domain.service.PushService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -25,6 +27,12 @@ class MateDroidApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var mobileServicesProfile: MobileServicesProfile
+
+    @Inject
+    lateinit var pushService: PushService
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -33,6 +41,13 @@ class MateDroidApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        Log.i(
+            "MateDroidApp",
+            "Distribution channel=${mobileServicesProfile.channel}, stack=${mobileServicesProfile.stack}"
+        )
+
+        pushService.initialize()
 
         initializeAmapPrivacy()
 

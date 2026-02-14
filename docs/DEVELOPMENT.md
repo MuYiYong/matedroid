@@ -248,6 +248,66 @@ Pre-configured profiles include:
 
 Releases are automated via GitHub Actions. When a release is published, the workflow builds the APK and attaches it to the release, and deploys to Google Play.
 
+#### Multi-market build outputs
+
+The app now supports store flavors for mainstream Android app markets:
+
+- `play` (Google Play)
+- `huawei`
+- `honor`
+- `xiaomi`
+- `oppo`
+- `samsung`
+- `fdroid`
+
+Mobile services stack mapping for the current scaffold:
+
+- `play`, `samsung` → `gms`
+- `huawei`, `honor` → `hms`
+- `xiaomi`, `oppo`, `fdroid` → `aosp`
+
+Each flavor exports both `BuildConfig.DISTRIBUTION_CHANNEL` and `BuildConfig.MOBILE_SERVICES_STACK`.
+The app provides these values through Hilt as `MobileServicesProfile`, so future Push/Account/Map integrations can switch implementation by stack without changing business logic.
+
+Push integration scaffold is already in place:
+
+- `PushService` interface: `app/src/main/java/com/matedroid/domain/service/PushService.kt`
+- `GmsPushService`, `HmsPushService`, `AospPushService`: selected by Hilt from `MobileServicesProfile.stack`
+- `MateDroidApp` initializes the selected `PushService` on startup
+
+To enable real push providers, implement SDK calls inside each service class (for example token retrieval, permission handling, and topic registration), while keeping app-level code unchanged.
+
+For Huawei/Honor variants, HMS Push dependency is enabled and `HmsPushService` performs token initialization on app startup.
+Set your App ID in `local.properties`:
+
+```properties
+HMS_APP_ID=your_huawei_app_id
+```
+
+If `HMS_APP_ID` is empty, HMS token initialization is skipped safely.
+
+Recommended output strategy:
+
+- **Google Play**: build and upload AAB (`playRelease`)
+- **Other stores**: upload release APKs for each market flavor
+
+Build commands:
+
+```bash
+# Google Play AAB
+make build-play-bundle
+
+# Single market APKs (example: Huawei)
+make build-market-apks MARKET=huawei
+
+# All non-Play market APKs
+make build-all-market-apks
+```
+
+Generated artifacts are under `app/build/outputs/` (`bundle/` for AAB and `apk/` for APKs).
+
+For release variants, ABI split is enabled for `arm64-v8a` and `armeabi-v7a`, and a universal APK is also produced.
+
 The recommended way to create releases is using the `/release` skill in Claude Code, which automates:
 1. Version bumping in `app/build.gradle.kts` (versionCode and versionName)
 2. Updating `CHANGELOG.md` with the release date

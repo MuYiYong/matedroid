@@ -24,12 +24,14 @@ android {
     namespace = "com.matedroid"
     compileSdk = 36
 
+    flavorDimensions += "store"
+
     defaultConfig {
         applicationId = "com.matedroid"
         minSdk = 28
         targetSdk = 36
-        versionCode = 33
-        versionName = "1.1.0"
+        versionCode = 34
+        versionName = "1.2.0"
 
         val amapApiKey =
             (project.findProperty("AMAP_API_KEY") as? String)
@@ -45,14 +47,67 @@ android {
                 ?: localProperties.getProperty("AMAP_GEOCODING_STRICT_CN", "true").toBooleanStrictOrNull()
                 ?: true
 
+        val hmsAppId =
+            (project.findProperty("HMS_APP_ID") as? String)
+                ?: localProperties.getProperty("HMS_APP_ID", "")
+
         manifestPlaceholders["AMAP_API_KEY"] =
             amapApiKey
 
         buildConfigField("String", "AMAP_API_KEY", "\"$amapApiKey\"")
         buildConfigField("String", "AMAP_WEB_API_KEY", "\"$amapWebApiKey\"")
         buildConfigField("boolean", "AMAP_GEOCODING_STRICT_CN", amapGeocodingStrictCn.toString())
+        buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"play\"")
+        buildConfigField("String", "MOBILE_SERVICES_STACK", "\"gms\"")
+        buildConfigField("String", "HMS_APP_ID", "\"$hmsAppId\"")
+        manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "play"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    productFlavors {
+        create("play") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"play\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"gms\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "play"
+        }
+        create("huawei") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"huawei\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"hms\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "huawei"
+        }
+        create("honor") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"honor\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"hms\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "honor"
+        }
+        create("xiaomi") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"xiaomi\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"aosp\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "xiaomi"
+        }
+        create("oppo") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"oppo\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"aosp\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "oppo"
+        }
+        create("samsung") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"samsung\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"gms\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "samsung"
+        }
+        create("fdroid") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"fdroid\"")
+            buildConfigField("String", "MOBILE_SERVICES_STACK", "\"aosp\"")
+            manifestPlaceholders["DISTRIBUTION_CHANNEL"] = "fdroid"
+        }
     }
 
     signingConfigs {
@@ -71,8 +126,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -104,6 +159,15 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = true
         }
     }
 
@@ -183,6 +247,8 @@ dependencies {
 
     // Maps
     implementation(libs.amap)
+    add("huaweiImplementation", libs.huawei.hms.push)
+    add("honorImplementation", libs.huawei.hms.push)
 
     // Testing
     testImplementation(libs.junit)

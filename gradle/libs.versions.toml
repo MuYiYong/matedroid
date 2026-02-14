@@ -27,6 +27,7 @@ turbine = "1.2.0"
 room = "2.6.1"
 workManager = "2.9.1"
 hiltWork = "1.2.0"
+hmsPush = "6.13.0.300"
 
 [libraries]
 # Core Android
@@ -81,6 +82,7 @@ vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", ve
 # Maps
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 amap = { group = "com.amap.api", name = "3dmap", version.ref = "amap" }
+huawei-hms-push = { group = "com.huawei.hms", name = "push", version.ref = "hmsPush" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

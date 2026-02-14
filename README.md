@@ -112,6 +112,12 @@ cd matedroid
 
 # The APK will be at: app/build/outputs/apk/debug/app-debug.apk
 
+# Build Google Play AAB (play flavor)
+./gradlew bundlePlayRelease
+
+# Build release APK for one market flavor (example: Huawei)
+./gradlew assembleHuaweiRelease
+
 # Or install directly to a connected device/emulator
 ./gradlew installDebug
 ```
