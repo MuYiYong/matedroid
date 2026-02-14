@@ -159,8 +159,8 @@
     <string name="expand">Expand</string>
 
     <!-- Server connection section -->
-    <string name="settings_connect_title">Connect to TeslamateApi</string>
-    <string name="settings_connect_description">Enter your TeslamateApi server URL to connect.</string>
+    <string name="settings_connect_title">Connect to TeslaMate API</string>
+    <string name="settings_connect_description">Enter your TeslaMate API server URL to connect.</string>
 
     <!-- Server URL field -->
     <string name="settings_server_url_label">Server URL</string>
@@ -177,7 +177,7 @@
     <!-- API token field -->
     <string name="settings_api_token_label">API Token (optional)</string>
     <string name="settings_api_token_placeholder">Your API token</string>
-    <string name="settings_api_token_hint">Leave empty if your TeslamateApi doesn\'t require authentication.</string>
+    <string name="settings_api_token_hint">Leave empty if your TeslaMate API doesn\'t require authentication.</string>
 
     <!-- Content description for password visibility toggle -->
     <string name="hide_token">Hide token</string>
@@ -228,6 +228,13 @@
     <string name="settings_primary_server">Primary server</string>
     <string name="settings_secondary_server">Secondary server</string>
     <string name="settings_connected">Connected</string>
+    <string name="settings_error_server_url_required">Server URL is required</string>
+    <string name="settings_error_url_must_start_http">URL must start with http:// or https://</string>
+    <string name="settings_error_primary_not_tested">Primary URL not tested</string>
+    <string name="settings_error_secondary_url_must_start_http">Secondary URL must start with http:// or https://</string>
+    <string name="settings_error_save_failed">Failed to save settings</string>
+    <string name="settings_resync_started_success">Full resync started. All cached data cleared. Check the Stats screen for progress.</string>
+    <string name="settings_resync_failed">Failed to start resync: %1$s</string>
 
     <!-- Link to GitHub issues page shown below version number -->
     <string name="settings_report_issue">Report an issue</string>
@@ -306,6 +313,7 @@
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="unknown_location">Unknown location</string>
+    <string name="resolving_location">Resolving location…</string>
     <string name="started">Started</string>
     <string name="ended">Ended</string>
     <!-- %s is the duration string (e.g., "1h 23m") -->
@@ -437,7 +445,7 @@
 
     <!-- Degradation info dialog -->
     <string name="estimated_degradation_title">Estimated Degradation</string>
-    <string name="estimated_degradation_message">Battery degradation is estimated based on Teslamate data.\n\n• Capacity (%): Remaining battery health compared to new\n• Loss (kWh): Energy capacity lost due to degradation\n• Loss (%): Percentage of original capacity lost\n\nNote: This is an estimate. Tesla does not provide official degradation data.</string>
+    <string name="estimated_degradation_message" formatted="false">Battery degradation is estimated based on TeslaMate data.\n\n• Capacity (%): Remaining battery health compared to new\n• Loss (kWh): Energy capacity lost due to degradation\n• Loss (%): Percentage of original capacity lost\n\nNote: This is an estimate. Tesla does not provide official degradation data.</string>
 
     <!-- Range section -->
     <string name="range">Range</string>
@@ -455,7 +463,7 @@
 
     <!-- Current charge info dialog -->
     <string name="current_charge_title">Current Charge</string>
-    <string name="current_charge_message">Shows your battery\'s current state of charge.\n\n • Battery (%): The charge level displayed on your dashboard\n • Usable (%): Actual usable charge (Tesla reserves a small buffer for battery protection)\n\nThis is the current charge, not the battery\'s long-term health.</string>
+    <string name="current_charge_message" formatted="false">Shows your battery\'s current state of charge.\n\n • Battery (%): The charge level displayed on your dashboard\n • Usable (%): Actual usable charge (Tesla reserves a small buffer for battery protection)\n\nThis is the current charge, not the battery\'s long-term health.</string>
 
     <!-- Range information section -->
     <string name="range_information">Range Information</string>
@@ -977,6 +985,9 @@
     <string name="debug_tpms_simulate_warning">Simulate TPMS Warning</string>
     <string name="debug_tpms_clear_state">Clear TPMS State</string>
     <string name="debug_tpms_run_now">Run TPMS Check Now</string>
+    <string name="debug_tpms_simulated_message">Simulated TPMS warning for %1$s</string>
+    <string name="debug_tpms_state_cleared_message">TPMS state cleared</string>
+    <string name="debug_tpms_check_triggered_message">TPMS check triggered - check logcat for TpmsPressureWorker</string>
 
     <!-- ==================== Charging Notifications ==================== -->
     <!-- Notification channel name for charging session alerts -->

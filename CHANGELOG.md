@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-14
+
+### Added
+- **Maps**: Migrated map rendering to AMap (Gaode) across dashboard, drive details, charge details, and regions visited views.
+- **Geocoding**: Added AMap reverse geocoding provider support with dedicated `AMAP_WEB_API_KEY`.
+- **Localization**: Added Simplified Chinese locale support (`zh-CN`).
+
+### Changed
+- **Dashboard**: Refined location card layout with larger right-side map preview while preserving the original location/elevation text style.
+- **Coordinates**: Added WGS84 → GCJ-02 conversion for AMap map rendering and geocoding requests.
+- **Configuration**: Added `AMAP_GEOCODING_STRICT_CN` option for mainland-friendly geocoding fallback behavior.
+
+### Fixed
+- **Maps**: Fixed frequent black screen / crash issues during map screen transitions by updating `MapView` lifecycle handling in Compose container.
+- **Geocoding**: Improved location matching accuracy by updating aggregates using original coordinates instead of coarse grid-only matching.
+- **Dashboard**: Improved resolved-location behavior and fallback messaging when reverse geocoding is still in progress.
+
 ## [1.1.0-beta3] - 2026-02-12
 
 ### Fixed

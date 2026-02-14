@@ -1,6 +1,9 @@
 package com.matedroid.data.repository
 
 import android.util.Log
+import com.matedroid.BuildConfig
+import com.matedroid.data.api.AmapAddressComponent
+import com.matedroid.data.api.AmapGeocodingApi
 import com.matedroid.data.api.NominatimApi
 import com.matedroid.data.api.NominatimAddress
 import com.matedroid.data.local.dao.GeocodeCacheDao
@@ -9,8 +12,12 @@ import com.matedroid.data.local.dao.GeocodeQueueDao
 import com.matedroid.data.local.entity.GeocodeCache
 import com.matedroid.data.local.entity.GeocodeProgress
 import com.matedroid.data.local.entity.GeocodeQueueItem
+import com.matedroid.domain.model.wgs84ToGcj02
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.Locale
+import java.util.TimeZone
+import kotlin.math.roundToInt
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,14 +53,19 @@ data class CountryBoundary(
 
 @Singleton
 class GeocodingRepository @Inject constructor(
+    private val amapGeocodingApi: AmapGeocodingApi,
     private val nominatimApi: NominatimApi,
     private val geocodeCacheDao: GeocodeCacheDao,
     private val geocodeQueueDao: GeocodeQueueDao,
     private val geocodeProgressDao: GeocodeProgressDao
 ) {
     companion object {
-        // Grid precision: 0.01° ≈ 1.1km at equator
-        private const val GRID_PRECISION = 100
+        // Grid precision: 0.0001° ≈ 11m at equator
+        // Keep near-original coordinates while still allowing lightweight deduplication.
+        private const val GRID_PRECISION = 10_000
+        private const val COUNTRY_CODE_CHINA = "CN"
+        private const val COUNTRY_NAME_CHINA_ZH = "中国"
+        private const val COUNTRY_NAME_CHINA_EN = "china"
     }
 
     // Legacy in-memory caches (kept for backward compatibility with reverseGeocode)
@@ -63,7 +75,7 @@ class GeocodingRepository @Inject constructor(
     /**
      * Convert coordinate to grid cell.
      */
-    fun toGridCoord(coord: Double): Int = (coord * GRID_PRECISION).toInt()
+    fun toGridCoord(coord: Double): Int = (coord * GRID_PRECISION).roundToInt()
 
     /**
      * Get cached location data for a grid cell.
@@ -147,25 +159,19 @@ class GeocodingRepository @Inject constructor(
      */
     suspend fun geocodeAndCache(item: GeocodeQueueItem): GeocodeCache? {
         return try {
-            val response = nominatimApi.reverseGeocode(item.latitude, item.longitude)
-            if (!response.isSuccessful) {
+            val location = reverseGeocodeByProvider(item.latitude, item.longitude)
+            if (location == null) {
                 geocodeQueueDao.markAttempt(item.gridLat, item.gridLon, System.currentTimeMillis())
                 return null
             }
 
-            val result = response.body()
-            val address = result?.address
-
             val cache = GeocodeCache(
                 gridLat = item.gridLat,
                 gridLon = item.gridLon,
-                countryCode = address?.countryCode?.uppercase(),
-                countryName = address?.country,
-                regionName = address?.state,
-                city = address?.city
-                    ?: address?.town
-                    ?: address?.village
-                    ?: address?.municipality,
+                countryCode = location.countryCode,
+                countryName = location.countryName,
+                regionName = location.regionName,
+                city = location.city,
                 cachedAt = System.currentTimeMillis()
             )
 
@@ -250,24 +256,17 @@ class GeocodingRepository @Inject constructor(
     // === Legacy methods for backward compatibility ===
 
     suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
-        // Round coordinates to 4 decimal places for caching (~11m accuracy)
-        val cacheKey = "%.4f,%.4f".format(latitude, longitude)
+        // Keep original coordinate precision in cache key
+        val cacheKey = "$latitude,$longitude"
 
         // Return cached result if available
         addressCache[cacheKey]?.let { return it }
 
         return try {
-            val response = nominatimApi.reverseGeocode(latitude, longitude)
-            if (response.isSuccessful) {
-                val result = response.body()
-                val address = formatAddress(result?.address)
-                    ?: result?.displayName?.split(",")?.take(3)?.joinToString(", ")
-
-                address?.also { addressCache[cacheKey] = it }
-            } else {
-                null
-            }
+            val location = reverseGeocodeByProvider(latitude, longitude)
+            location?.address?.also { addressCache[cacheKey] = it }
         } catch (e: Exception) {
+            Log.e("GeocodingRepository", "reverseGeocode exception for ($latitude,$longitude)", e)
             null
         }
     }
@@ -277,34 +276,155 @@ class GeocodingRepository @Inject constructor(
      * Used for extracting country information from drive positions.
      */
     suspend fun reverseGeocodeWithCountry(latitude: Double, longitude: Double): GeocodedLocation? {
-        // Round coordinates to 4 decimal places for caching (~11m accuracy)
-        val cacheKey = "%.4f,%.4f".format(latitude, longitude)
+        // Keep original coordinate precision in cache key
+        val cacheKey = "$latitude,$longitude"
 
         // Return cached result if available
         locationCache[cacheKey]?.let { return it }
 
         return try {
-            val response = nominatimApi.reverseGeocode(latitude, longitude)
-            if (response.isSuccessful) {
-                val result = response.body()
-                val address = result?.address
-                val location = GeocodedLocation(
-                    address = formatAddress(address)
-                        ?: result?.displayName?.split(",")?.take(3)?.joinToString(", "),
-                    countryCode = address?.countryCode?.uppercase(),
-                    countryName = address?.country,
-                    regionName = address?.state,
-                    city = address?.city
-                        ?: address?.town
-                        ?: address?.village
-                        ?: address?.municipality
-                )
-                locationCache[cacheKey] = location
-                location
-            } else {
-                null
-            }
+            val location = reverseGeocodeByProvider(latitude, longitude)
+            location?.also { locationCache[cacheKey] = it }
         } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun reverseGeocodeByProvider(latitude: Double, longitude: Double): GeocodedLocation? {
+        reverseGeocodeWithAmap(latitude, longitude)?.let {
+            Log.i("GeocodingRepository", "Geocode provider hit: AMap for ($latitude,$longitude)")
+            return it
+        }
+        return reverseGeocodeWithNominatim(latitude, longitude)?.also {
+            Log.i("GeocodingRepository", "Geocode provider hit: Nominatim fallback for ($latitude,$longitude)")
+        }
+    }
+
+    private fun isLikelyMainlandChinaEnvironment(): Boolean {
+        val localeCountry = Locale.getDefault().country.uppercase(Locale.ROOT)
+        val timezoneId = TimeZone.getDefault().id
+        return localeCountry == COUNTRY_CODE_CHINA || timezoneId == "Asia/Shanghai"
+    }
+
+    private suspend fun reverseGeocodeWithAmap(latitude: Double, longitude: Double): GeocodedLocation? {
+        val amapApiKey = BuildConfig.AMAP_WEB_API_KEY.ifBlank { BuildConfig.AMAP_API_KEY }
+        if (amapApiKey.isBlank()) {
+            Log.w("GeocodingRepository", "AMAP_WEB_API_KEY/AMAP_API_KEY are blank, skipping AMap geocoding")
+            return null
+        }
+
+        return try {
+            val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
+            val location = "$gcjLon,$gcjLat"
+            val response = amapGeocodingApi.reverseGeocode(location = location, key = amapApiKey)
+            if (!response.isSuccessful) {
+                Log.w(
+                    "GeocodingRepository",
+                    "AMap reverse geocode failed for ($latitude,$longitude): HTTP ${response.code()}"
+                )
+                return null
+            }
+
+            val result = response.body()
+            if (result?.status != "1") {
+                Log.w(
+                    "GeocodingRepository",
+                    "AMap reverse geocode unsuccessful for ($latitude,$longitude): ${result?.info}"
+                )
+                return null
+            }
+
+            val component = result.regeocode?.addressComponent
+            val countryName = component?.country
+            GeocodedLocation(
+                address = formatAmapCompactAddress(component, result.regeocode?.formattedAddress),
+                countryCode = resolveCountryCode(countryName),
+                countryName = countryName,
+                regionName = component?.province,
+                city = parseAmapCity(component?.city)
+                    ?: component?.district
+                    ?: component?.township
+            )
+        } catch (e: Exception) {
+            Log.e("GeocodingRepository", "AMap reverse geocode exception for ($latitude,$longitude)", e)
+            null
+        }
+    }
+
+    private suspend fun reverseGeocodeWithNominatim(latitude: Double, longitude: Double): GeocodedLocation? {
+        return try {
+            val response = nominatimApi.reverseGeocode(latitude, longitude)
+            if (!response.isSuccessful) {
+                Log.w(
+                    "GeocodingRepository",
+                    "Nominatim reverse geocode failed for ($latitude,$longitude): HTTP ${response.code()}"
+                )
+                return null
+            }
+
+            val result = response.body()
+            val address = result?.address
+            val resolvedAddress = formatAddress(address)
+                ?: result?.displayName?.split(",")?.take(3)?.joinToString(", ")
+
+            if (resolvedAddress == null) {
+                Log.w("GeocodingRepository", "Nominatim reverse geocode empty body/address for ($latitude,$longitude)")
+            }
+
+            GeocodedLocation(
+                address = resolvedAddress,
+                countryCode = address?.countryCode?.uppercase(),
+                countryName = address?.country,
+                regionName = address?.state,
+                city = address?.city
+                    ?: address?.town
+                    ?: address?.village
+                    ?: address?.municipality
+            )
+        } catch (e: Exception) {
+            Log.e("GeocodingRepository", "Nominatim reverse geocode exception for ($latitude,$longitude)", e)
+            null
+        }
+    }
+
+    private fun parseAmapCity(city: Any?): String? {
+        return when (city) {
+            is String -> city.takeIf { it.isNotBlank() }
+            is List<*> -> city.filterIsInstance<String>().firstOrNull { it.isNotBlank() }
+            else -> null
+        }
+    }
+
+    private fun formatAmapCompactAddress(
+        component: AmapAddressComponent?,
+        formattedAddress: String?
+    ): String? {
+        if (component == null) {
+            return formattedAddress?.takeIf { it.isNotBlank() }
+        }
+
+        val street = component.streetNumber?.street?.takeIf { it.isNotBlank() }
+        val number = component.streetNumber?.number?.takeIf { it.isNotBlank() }
+        val road = listOfNotNull(street, number).joinToString(" ").takeIf { it.isNotBlank() }
+
+        val district = component.district?.takeIf { it.isNotBlank() }
+        val township = component.township?.takeIf { it.isNotBlank() }
+        val city = parseAmapCity(component.city)
+
+        return when {
+            road != null -> road
+            township != null -> township
+            district != null -> district
+            city != null -> city
+            else -> formattedAddress?.takeIf { it.isNotBlank() }
+        }
+    }
+
+    private fun resolveCountryCode(countryName: String?): String? {
+        val normalized = countryName?.trim()?.lowercase(Locale.ROOT) ?: return null
+        return if (normalized == COUNTRY_NAME_CHINA_EN || countryName == COUNTRY_NAME_CHINA_ZH) {
+            COUNTRY_CODE_CHINA
+        } else {
             null
         }
     }

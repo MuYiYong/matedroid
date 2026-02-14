@@ -160,7 +160,9 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
                     testResult = TestResult(
-                        primaryResult = ServerTestResult.Failure("Server URL is required")
+                        primaryResult = ServerTestResult.Failure(
+                            context.getString(R.string.settings_error_server_url_required)
+                        )
                     )
                 )
                 return@launch
@@ -170,7 +172,9 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
                     testResult = TestResult(
-                        primaryResult = ServerTestResult.Failure("URL must start with http:// or https://")
+                        primaryResult = ServerTestResult.Failure(
+                            context.getString(R.string.settings_error_url_must_start_http)
+                        )
                     )
                 )
                 return@launch
@@ -182,8 +186,12 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isTesting = false,
                     testResult = TestResult(
-                        primaryResult = ServerTestResult.Failure("Primary URL not tested"),
-                        secondaryResult = ServerTestResult.Failure("Secondary URL must start with http:// or https://")
+                        primaryResult = ServerTestResult.Failure(
+                            context.getString(R.string.settings_error_primary_not_tested)
+                        ),
+                        secondaryResult = ServerTestResult.Failure(
+                            context.getString(R.string.settings_error_secondary_url_must_start_http)
+                        )
                     )
                 )
                 return@launch
@@ -247,7 +255,7 @@ class SettingsViewModel @Inject constructor(
                 if (url.isBlank()) {
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,
-                        error = "Server URL is required"
+                        error = context.getString(R.string.settings_error_server_url_required)
                     )
                     return@launch
                 }
@@ -270,7 +278,7 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
-                    error = e.message ?: "Failed to save settings"
+                    error = e.message ?: context.getString(R.string.settings_error_save_failed)
                 )
             }
         }
@@ -302,20 +310,23 @@ class SettingsViewModel @Inject constructor(
                         triggerImmediateSync()
                         _uiState.value = _uiState.value.copy(
                             isResyncing = false,
-                            successMessage = "Full resync started. All cached data cleared. Check the Stats screen for progress."
+                            successMessage = context.getString(R.string.settings_resync_started_success)
                         )
                     }
                     is ApiResult.Error -> {
                         _uiState.value = _uiState.value.copy(
                             isResyncing = false,
-                            error = "Failed to start resync: ${result.message}"
+                            error = context.getString(R.string.settings_resync_failed, result.message)
                         )
                     }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isResyncing = false,
-                    error = "Failed to start resync: ${e.message}"
+                    error = context.getString(
+                        R.string.settings_resync_failed,
+                        e.message ?: context.getString(R.string.unknown)
+                    )
                 )
             }
         }
@@ -360,7 +371,7 @@ class SettingsViewModel @Inject constructor(
             )
 
             _uiState.value = _uiState.value.copy(
-                successMessage = "Simulated TPMS warning for ${tire.name}"
+                successMessage = context.getString(R.string.debug_tpms_simulated_message, tireName)
             )
         }
     }
@@ -383,7 +394,7 @@ class SettingsViewModel @Inject constructor(
             )
 
             _uiState.value = _uiState.value.copy(
-                successMessage = "TPMS state cleared"
+                successMessage = context.getString(R.string.debug_tpms_state_cleared_message)
             )
         }
     }
@@ -434,7 +445,7 @@ class SettingsViewModel @Inject constructor(
     fun runTpmsCheckNow() {
         TpmsPressureWorker.runNow(context)
         _uiState.value = _uiState.value.copy(
-            successMessage = "TPMS check triggered - check logcat for TpmsPressureWorker"
+            successMessage = context.getString(R.string.debug_tpms_check_triggered_message)
         )
     }
 }

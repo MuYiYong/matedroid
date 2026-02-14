@@ -1,7 +1,6 @@
 package com.matedroid.ui.screens.drives
 
 import android.content.Intent
-import android.graphics.Paint
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -46,7 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
@@ -63,22 +61,23 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.BitmapDescriptorFactory
+import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.LatLngBounds
+import com.amap.api.maps.model.MarkerOptions
+import com.amap.api.maps.model.PolylineOptions
 import com.matedroid.R
 import com.matedroid.data.api.models.DriveDetail
 import com.matedroid.data.api.models.DrivePosition
 import com.matedroid.data.api.models.Units
 import com.matedroid.data.repository.WeatherPoint
+import com.matedroid.domain.model.wgs84ToGcj02
 import com.matedroid.domain.model.UnitFormatter
+import com.matedroid.ui.components.AmapViewContainer
 import com.matedroid.ui.components.FullscreenLineChart
 import com.matedroid.ui.theme.CarColorPalettes
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.BoundingBox
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Polyline
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -412,6 +411,13 @@ private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
     val context = LocalContext.current
     val routeColorArgb = routeColor.toArgb()
     val validPositions = positions.filter { it.latitude != null && it.longitude != null }
+    val routeKey = buildString {
+        append(validPositions.size)
+        append("|")
+        validPositions.firstOrNull()?.let { append(it.latitude).append(",").append(it.longitude) }
+        append("|")
+        validPositions.lastOrNull()?.let { append(it.latitude).append(",").append(it.longitude) }
+    }
 
     if (validPositions.isEmpty()) return
 
@@ -453,60 +459,45 @@ private fun DriveMapCard(positions: List<DrivePosition>, routeColor: Color) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp)
+                    .height(190.dp)
                     .clip(RoundedCornerShape(8.dp))
             ) {
-                DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
-                    onDispose { }
-                }
-
-                AndroidView(
-                    factory = { ctx ->
-                        MapView(ctx).apply {
-                            setTileSource(TileSourceFactory.MAPNIK)
-                            setMultiTouchControls(true)
-
-                            // Create polyline for the route
-                            val geoPoints = validPositions.map { pos ->
-                                GeoPoint(pos.latitude!!, pos.longitude!!)
-                            }
-
-                            val polyline = Polyline().apply {
-                                setPoints(geoPoints)
-                                outlinePaint.color = routeColorArgb
-                                outlinePaint.strokeWidth = 8f
-                                outlinePaint.strokeCap = Paint.Cap.ROUND
-                                outlinePaint.strokeJoin = Paint.Join.ROUND
-                            }
-                            overlays.add(polyline)
-
-                            // Calculate bounding box with padding
-                            if (geoPoints.isNotEmpty()) {
-                                val north = geoPoints.maxOf { it.latitude }
-                                val south = geoPoints.minOf { it.latitude }
-                                val east = geoPoints.maxOf { it.longitude }
-                                val west = geoPoints.minOf { it.longitude }
-
-                                // Add some padding
-                                val latPadding = (north - south) * 0.15
-                                val lonPadding = (east - west) * 0.15
-
-                                val boundingBox = BoundingBox(
-                                    north + latPadding,
-                                    east + lonPadding,
-                                    south - latPadding,
-                                    west - lonPadding
-                                )
-
-                                post {
-                                    zoomToBoundingBox(boundingBox, false)
-                                    invalidate()
-                                }
-                            }
+                AmapViewContainer(
+                    modifier = Modifier.fillMaxSize(),
+                    updateKey = routeKey,
+                    onMapUpdate = { map ->
+                        val latLngs = validPositions.map {
+                            val (gcjLat, gcjLon) = wgs84ToGcj02(it.latitude!!, it.longitude!!)
+                            LatLng(gcjLat, gcjLon)
                         }
-                    },
-                    modifier = Modifier.fillMaxSize()
+                        map.clear()
+
+                        if (latLngs.size >= 2) {
+                            map.addPolyline(
+                                PolylineOptions()
+                                    .addAll(latLngs)
+                                    .color(routeColorArgb)
+                                    .width(10f)
+                            )
+
+                            map.addMarker(
+                                MarkerOptions()
+                                    .position(latLngs.first())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                            )
+                            map.addMarker(
+                                MarkerOptions()
+                                    .position(latLngs.last())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                            )
+
+                            val boundsBuilder = LatLngBounds.builder()
+                            latLngs.forEach { boundsBuilder.include(it) }
+                            map.moveCamera(
+                                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 80)
+                            )
+                        }
+                    }
                 )
             }
         }

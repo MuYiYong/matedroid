@@ -647,6 +647,27 @@ interface AggregateDao {
     )
 
     @Query("""
+        UPDATE drive_detail_aggregates
+        SET startCountryCode = :countryCode,
+            startCountryName = :countryName,
+            startRegionName = :regionName,
+            startCity = :city
+        WHERE carId = :carId
+        AND startLatitude = :latitude
+        AND startLongitude = :longitude
+        AND startCountryCode IS NULL
+    """)
+    suspend fun updateDriveLocationsByCoordinate(
+        carId: Int,
+        latitude: Double,
+        longitude: Double,
+        countryCode: String?,
+        countryName: String?,
+        regionName: String?,
+        city: String?
+    )
+
+    @Query("""
         UPDATE charge_detail_aggregates
         SET countryCode = :countryCode,
             countryName = :countryName,
@@ -665,6 +686,31 @@ interface AggregateDao {
         carId: Int,
         gridLat: Int,
         gridLon: Int,
+        countryCode: String?,
+        countryName: String?,
+        regionName: String?,
+        city: String?
+    )
+
+    @Query("""
+        UPDATE charge_detail_aggregates
+        SET countryCode = :countryCode,
+            countryName = :countryName,
+            regionName = :regionName,
+            city = :city
+        WHERE chargeId IN (
+            SELECT c.chargeId FROM charges_summary c
+            JOIN charge_detail_aggregates a ON c.chargeId = a.chargeId
+            WHERE a.carId = :carId
+            AND c.latitude = :latitude
+            AND c.longitude = :longitude
+            AND a.countryCode IS NULL
+        )
+    """)
+    suspend fun updateChargeLocationsByCoordinate(
+        carId: Int,
+        latitude: Double,
+        longitude: Double,
         countryCode: String?,
         countryName: String?,
         regionName: String?,
