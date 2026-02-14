@@ -72,9 +72,11 @@ class DashboardViewModel @Inject constructor(
 
     private var autoRefreshJob: Job? = null
     private var lastGeocodedLocation: Pair<Double, Double>? = null
+    private var lastGeocodeAttemptAt: Long = 0L
 
     companion object {
         private const val AUTO_REFRESH_INTERVAL_MS = 5000L
+        private const val GEOCODE_RETRY_INTERVAL_MS = 60_000L
     }
 
     // Cache of current overrides for use when selectedCarId changes
@@ -227,28 +229,33 @@ class DashboardViewModel @Inject constructor(
         val lat = status.latitude
         val lon = status.longitude
         val hasGeofence = !status.geofence.isNullOrBlank()
+        val now = System.currentTimeMillis()
 
         // Only fetch if no geofence, coordinates exist, and location changed
         if (!hasGeofence && lat != null && lon != null) {
             val currentLocation = Pair(lat, lon)
             // Check if we've already geocoded this location (with some tolerance)
-            if (lastGeocodedLocation?.let { (lastLat, lastLon) ->
+            val isSameLocation = lastGeocodedLocation?.let { (lastLat, lastLon) ->
                     kotlin.math.abs(lastLat - lat) < 0.0001 && kotlin.math.abs(lastLon - lon) < 0.0001
-                } == true) {
+                } == true
+
+            // Same location: retry only after interval, otherwise keep current display
+            if (isSameLocation && now - lastGeocodeAttemptAt < GEOCODE_RETRY_INTERVAL_MS) {
                 return
             }
 
             lastGeocodedLocation = currentLocation
+            lastGeocodeAttemptAt = now
             viewModelScope.launch {
                 val address = geocodingRepository.reverseGeocode(lat, lon)
-                if (address != null) {
-                    _uiState.update { it.copy(resolvedAddress = address) }
-                }
+                val displayLocation = address ?: "$lat, $lon"
+                _uiState.update { it.copy(resolvedAddress = displayLocation) }
             }
         } else if (hasGeofence) {
             // Clear resolved address if geofence is available
             _uiState.update { it.copy(resolvedAddress = null) }
             lastGeocodedLocation = null
+            lastGeocodeAttemptAt = 0L
         }
     }
 
@@ -271,7 +278,14 @@ class DashboardViewModel @Inject constructor(
                         checkCurrentChargeAvailability(carId, status)
                     }
                     is ApiResult.Error -> {
-                        // Silently ignore errors during auto-refresh
+                        if (_uiState.value.carStatus == null) {
+                            _uiState.update {
+                                it.copy(
+                                    error = result.message,
+                                    errorDetails = result.details
+                                )
+                            }
+                        }
                     }
                 }
             }

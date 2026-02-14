@@ -228,6 +228,13 @@
     <string name="settings_primary_server">Servidor principal</string>
     <string name="settings_secondary_server">Servidor secundari</string>
     <string name="settings_connected">Connectat</string>
+    <string name="settings_error_server_url_required">URL del servidor obligatori</string>
+    <string name="settings_error_url_must_start_http">URL ha de començar amb http:// o https://</string>
+    <string name="settings_error_primary_not_tested">URL principal no provat</string>
+    <string name="settings_error_secondary_url_must_start_http">URL secundari ha de començar amb http:// o https://</string>
+    <string name="settings_error_save_failed">No es poden desar els ajustos</string>
+    <string name="settings_resync_started_success">Resincronització completa iniciada. Totes les dades en memòria cau han estat esborrades. Revisa la pantalla Estadístiques per veure el progrés.</string>
+    <string name="settings_resync_failed">No es pot iniciar la resincronització: %1$s</string>
 
     <!-- Link to GitHub issues page shown below version number -->
     <string name="settings_report_issue">Informa d\'un problema</string>
@@ -306,6 +313,7 @@
     <string name="from">Des de</string>
     <string name="to">Fins a</string>
     <string name="unknown_location">Ubicació desconeguda</string>
+    <string name="resolving_location">S\'està resolent la ubicació…</string>
     <string name="started">Inici</string>
     <string name="ended">Fi</string>
     <!-- %s is the duration string (e.g., "1h 23m") -->
@@ -437,7 +445,7 @@
 
     <!-- Degradation info dialog -->
     <string name="estimated_degradation_title">Degradació Estimada</string>
-    <string name="estimated_degradation_message">La degradació de la bateria s\'estima basant-se en dades de Teslamate.\n\n• Capacitat (%): Salut restant de la bateria comparada amb nova\n• Pèrdua (kWh): Capacitat energètica perduda per degradació\n• Pèrdua (%): Percentatge de la capacitat original perduda\n\nNota: Això és una estimació. Tesla no proporciona dades oficials de degradació.</string>
+    <string name="estimated_degradation_message" formatted="false">La degradació de la bateria s\'estima basant-se en dades de TeslaMate.\n\n• Capacitat (%): Salut restant de la bateria comparada amb nova\n• Pèrdua (kWh): Capacitat energètica perduda per degradació\n• Pèrdua (%): Percentatge de la capacitat original perduda\n\nNota: Això és una estimació. Tesla no proporciona dades oficials de degradació.</string>
 
     <!-- Range section -->
     <string name="range">Autonomia</string>
@@ -455,7 +463,7 @@
 
     <!-- Current charge info dialog -->
     <string name="current_charge_title">Càrrega Actual</string>
-    <string name="current_charge_message">Mostra l\'estat de càrrega actual de la bateria.\n • Bateria (%): El nivell de càrrega mostrat al tauler\n • Utilitzable (%): Càrrega realment utilitzable (Tesla reserva un petit búfer per protecció)\n \n Aquesta és la càrrega actual, no la salut a llarg termini de la bateria.</string>
+    <string name="current_charge_message" formatted="false">Mostra l\'estat de càrrega actual de la bateria.\n • Bateria (%): El nivell de càrrega mostrat al tauler\n • Utilitzable (%): Càrrega realment utilitzable (Tesla reserva un petit búfer per protecció)\n \n Aquesta és la càrrega actual, no la salut a llarg termini de la bateria.</string>
 
     <!-- Range information section -->
     <string name="range_information">Informació d\'Autonomia</string>
@@ -977,6 +985,9 @@
     <string name="debug_tpms_simulate_warning">Simula Avís TPMS</string>
     <string name="debug_tpms_clear_state">Esborra Estat TPMS</string>
     <string name="debug_tpms_run_now">Run TPMS Check Now</string>
+    <string name="debug_tpms_simulated_message">Avís TPMS simulat per a %1$s</string>
+    <string name="debug_tpms_state_cleared_message">Estat TPMS esborrat</string>
+    <string name="debug_tpms_check_triggered_message">Comprovació TPMS iniciada - revisa logcat per a TpmsPressureWorker</string>
 
     <!-- ==================== Charging Notifications ==================== -->
     <!-- Notification channel name for charging session alerts -->

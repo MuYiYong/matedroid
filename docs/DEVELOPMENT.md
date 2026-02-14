@@ -35,7 +35,23 @@ matedroid/
 - **Networking**: Retrofit + OkHttp + Moshi
 - **Local Storage**: DataStore
 - **Charts**: Vico
-- **Maps**: osmdroid (OpenStreetMap)
+- **Maps**: AMap (Gaode)
+
+### AMap API Key
+
+Embedded maps and reverse geocoding use AMap. Set your key in `local.properties`:
+
+```properties
+AMAP_API_KEY=your_amap_key_here
+# Optional but recommended: dedicated Web Service key for reverse geocoding API
+AMAP_WEB_API_KEY=your_amap_web_service_key_here
+# Optional: in CN mainland-like environment, disable Nominatim fallback and use AMap only
+AMAP_GEOCODING_STRICT_CN=true
+```
+
+The Gradle build injects these values into Android manifest metadata and `BuildConfig` automatically.
+Use `AMAP_API_KEY` for map SDK, and `AMAP_WEB_API_KEY` for reverse geocoding HTTP API.
+Set `AMAP_GEOCODING_STRICT_CN=false` if you want to keep Nominatim fallback even in mainland-like environments.
 
 ### Localization (i18n)
 

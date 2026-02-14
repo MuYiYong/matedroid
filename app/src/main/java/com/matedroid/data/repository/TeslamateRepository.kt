@@ -221,13 +221,25 @@ class TeslamateRepository @Inject constructor(
             try {
                 val response = api.getCarStatus(carId)
                 if (response.isSuccessful) {
-                    val data = response.body()?.data
+                    val body = response.body()
+                    val apiError = body?.error?.takeIf { it.isNotBlank() }
+                    if (apiError != null) {
+                        ApiResult.Error(
+                            message = "Vehicle status unavailable",
+                            details = "Server returned: $apiError"
+                        )
+                    } else {
+                        val data = body?.data
                     val status = data?.status
                     val units = data?.units ?: Units()
                     if (status != null) {
                         ApiResult.Success(CarStatusWithUnits(status, units))
                     } else {
-                        ApiResult.Error("No status data returned")
+                        ApiResult.Error(
+                            message = "No status data returned",
+                            details = "The status endpoint did not include the expected data.status object."
+                        )
+                    }
                     }
                 } else {
                     ApiResult.Error("Failed to fetch status: ${response.code()}", response.code())

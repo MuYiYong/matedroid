@@ -84,7 +84,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -110,17 +109,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.BitmapDescriptorFactory
+import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.MarkerOptions
 import com.matedroid.R
 import com.matedroid.data.local.CarImageOverride
+import com.matedroid.ui.components.AmapViewContainer
 import com.matedroid.ui.components.CarImagePickerDialog
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
 import com.matedroid.data.api.models.BatteryDetails
+import com.matedroid.domain.model.wgs84ToGcj02
 import com.matedroid.data.api.models.CarExterior
 import com.matedroid.data.api.models.CarGeodata
 import com.matedroid.data.api.models.CarStatus
@@ -163,7 +162,6 @@ fun DashboardScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
         }
     }
 
@@ -1480,6 +1478,8 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
     val longitude = status.longitude
     val geofence = status.geofence
     val elevation = status.elevation
+    val unknownLocation = stringResource(R.string.unknown_location)
+    val resolvingLocation = stringResource(R.string.resolving_location)
 
     // Location text: geofence name if available, then resolved address, then coordinates
     // Use takeIf to handle empty strings (API may return "" instead of null)
@@ -1487,9 +1487,9 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
         ?: resolvedAddress?.takeIf { it.isNotBlank() }
         ?: run {
             if (latitude != null && longitude != null) {
-                "%.5f, %.5f".format(latitude, longitude)
+                resolvingLocation
             } else {
-                "Unknown"
+                unknownLocation
             }
         }
 
@@ -1525,66 +1525,71 @@ private fun LocationCard(status: CarStatus, units: Units?, resolvedAddress: Stri
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = null,
-                    tint = palette.accent
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.location),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant
-                    )
-                    Text(
-                        text = locationText,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = palette.onSurface
-                    )
+            val showMap = latitude != null && longitude != null
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = if (showMap) 180.dp else 0.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(
+                            imageVector = Icons.Filled.LocationOn,
+                            contentDescription = null,
+                            tint = palette.accent
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.location),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = palette.onSurfaceVariant
+                            )
+                            Text(
+                                text = locationText,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = palette.onSurface
+                            )
+                        }
+                    }
+
+                    if (elevationText != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Terrain,
+                                contentDescription = null,
+                                tint = palette.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = stringResource(R.string.elevation),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = palette.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = elevationText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = palette.onSurface,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
                 }
 
-                // Small map showing car location
-                if (latitude != null && longitude != null) {
-                    Spacer(modifier = Modifier.width(12.dp))
+                if (showMap) {
                     SmallLocationMap(
                         latitude = latitude,
                         longitude = longitude,
                         onClick = { openInMaps() },
                         modifier = Modifier
-                            .width(140.dp)
-                            .height(70.dp)
+                            .align(Alignment.BottomEnd)
+                            .width(168.dp)
+                            .height(88.dp)
                             .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-            }
-
-            // Elevation row - icon aligned with location icon, text aligned with location text
-            if (elevationText != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Terrain,
-                        contentDescription = null,
-                        tint = palette.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.elevation),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = palette.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = elevationText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.onSurface,
-                        maxLines = 1,
-                        softWrap = false
                     )
                 }
             }
@@ -1599,42 +1604,33 @@ private fun SmallLocationMap(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-
-    DisposableEffect(Unit) {
-        Configuration.getInstance().userAgentValue = "MateDroid/1.0"
-        onDispose { }
-    }
-
     Box(
         modifier = modifier.clickable { onClick() }
     ) {
-        AndroidView(
-            factory = { ctx ->
-                MapView(ctx).apply {
-                    setTileSource(TileSourceFactory.MAPNIK)
-                    setMultiTouchControls(false)
-
-                    // Disable all interactions for this small preview map
-                    setBuiltInZoomControls(false)
-                    isClickable = false
-                    isFocusable = false
-
-                    val carLocation = GeoPoint(latitude, longitude)
-                    controller.setZoom(15.0)
-                    controller.setCenter(carLocation)
-
-                // Add a marker for the car
-                val marker = Marker(this).apply {
-                    position = carLocation
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = ctx.getDrawable(android.R.drawable.ic_menu_mylocation)
+        AmapViewContainer(
+            modifier = Modifier.fillMaxSize(),
+            updateKey = "${latitude},${longitude}",
+            onMapReady = { map ->
+                map.uiSettings.apply {
+                    isZoomControlsEnabled = false
+                    isScrollGesturesEnabled = false
+                    isZoomGesturesEnabled = false
+                    isTiltGesturesEnabled = false
+                    isRotateGesturesEnabled = false
                 }
-                overlays.add(marker)
+            },
+            onMapUpdate = { map ->
+                val (gcjLat, gcjLon) = wgs84ToGcj02(latitude, longitude)
+                val carLocation = LatLng(gcjLat, gcjLon)
+                map.clear()
+                map.addMarker(
+                    MarkerOptions()
+                        .position(carLocation)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                )
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(carLocation, 15f))
             }
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+        )
     }
 }
 @Composable

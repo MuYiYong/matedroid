@@ -388,7 +388,10 @@ private fun EmptyState(palette: CarColorPalette) {
  */
 private fun getLocalizedCountryName(countryCode: String): String {
     return try {
-        Locale("", countryCode).getDisplayCountry(Locale.getDefault())
+        Locale.Builder()
+            .setRegion(countryCode.uppercase(Locale.ROOT))
+            .build()
+            .getDisplayCountry(Locale.getDefault())
             .takeIf { it.isNotBlank() && it != countryCode } ?: countryCode
     } catch (e: Exception) {
         countryCode

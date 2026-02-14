@@ -2,6 +2,7 @@ package com.matedroid
 
 import android.app.Application
 import android.util.Log
+import com.amap.api.maps.MapsInitializer
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.BackoffPolicy
@@ -32,6 +33,8 @@ class MateDroidApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        initializeAmapPrivacy()
 
         // Start background sync on app launch
         enqueueSyncWork()
@@ -73,5 +76,10 @@ class MateDroidApp : Application(), Configuration.Provider {
         )
 
         Log.d("MateDroidApp", "Enqueued sync work")
+    }
+
+    private fun initializeAmapPrivacy() {
+        MapsInitializer.updatePrivacyShow(this, true, true)
+        MapsInitializer.updatePrivacyAgree(this, true)
     }
 }

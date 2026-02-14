@@ -7,7 +7,7 @@
 </p>
 <br clear="all">
 
-A native Android application for viewing Tesla vehicle data from your self-hosted [Teslamate](https://github.com/adriankumpf/teslamate) instance via the [TeslamateApi](https://github.com/tobiasehlert/teslamateapi).
+A native Android application for viewing Tesla vehicle data from your self-hosted [TeslaMate](https://github.com/adriankumpf/teslamate) instance via the [TeslaMate API](https://github.com/tobiasehlert/teslamateapi).
 
 **DISCLAIMER**: This app has been *vibe-coded*
 
@@ -17,7 +17,7 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 - **Notifications** - Live notification (Android 16+) of charging sessions and pressure alert notification
 - **Stats for Nerds** - Tap car image for advanced statistics: records, extremes, AC/DC ratio and much more!
 - **Charging History** - View all charging sessions with statistics and charts
-- **Charge Details** - Interactive map and detailed power/voltage/temperature charts
+- **Charge Details** - Interactive AMap and detailed power/voltage/temperature charts
 - **Drive History** - Track trips with efficiency metrics and route visualization
 - **Battery Health** - Monitor battery degradation over time
 - **Software Updates** - Track update history
@@ -48,7 +48,7 @@ A native Android application for viewing Tesla vehicle data from your self-hoste
 
 #### Dashboard
 
-Your car at a glance: live status, battery level, location on a map, tire pressures, and quick access to all the other sections. The 3D car image matches your actual color, trim, and wheels — tap it for stats, long-press to change the angle. When charging, the battery card comes alive with real-time power and ETA.
+Your car at a glance: live status, battery level, location on AMap, tire pressures, and quick access to all the other sections. The 3D car image matches your actual color, trim, and wheels — tap it for stats, long-press to change the angle. When charging, the battery card comes alive with real-time power and ETA.
 
 #### Charges & Drives
 
@@ -81,10 +81,10 @@ The app themes itself based on your car's exterior color — every Tesla color h
 ## Requirements
 
 - Android 10 (API 29) or higher
-- A running [Teslamate](https://github.com/adriankumpf/teslamate) instance
-- [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) deployed and accessible
+- A running [TeslaMate](https://github.com/adriankumpf/teslamate) instance
+- [TeslaMate API](https://github.com/tobiasehlert/teslamateapi) deployed and accessible
 
-**This projects needs Teslamate API to work**, it will not work just with plan Teslamate. Please follow the Teslamate API instructions and make sure it is working as expected before opening any issue, thanks!
+**This project needs TeslaMate API to work**, it will not work with plain TeslaMate only. Please follow the TeslaMate API instructions and make sure it is working as expected before opening any issue, thanks!
 
 ## Installation
 
@@ -126,6 +126,6 @@ This project is licensed under the GNU General Public License v3.0. See [LICENSE
 
 ## Acknowledgments
 
-- [Teslamate](https://github.com/adriankumpf/teslamate) - Self-hosted Tesla data logger
-- [TeslamateApi](https://github.com/tobiasehlert/teslamateapi) - RESTful API for Teslamate
+- [TeslaMate](https://github.com/adriankumpf/teslamate) - Self-hosted Tesla data logger
+- [TeslaMate API](https://github.com/tobiasehlert/teslamateapi) - RESTful API for TeslaMate
 - [t-buddy](https://github.com/garanda21/t-buddy) - iOS app that triggered this development and was used as inspiration. Many kudos, it's a wonderful app and you should use it if you are on iOS!

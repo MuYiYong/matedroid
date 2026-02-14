@@ -528,30 +528,27 @@ class SyncRepository @Inject constructor(
      */
     private suspend fun applyCachedGeocodeData(carId: Int, locations: List<Pair<Double, Double>>): Int {
         var appliedCount = 0
-        val uniqueGridCells = locations
-            .map { (lat, lon) ->
-                geocodingRepository.toGridCoord(lat) to geocodingRepository.toGridCoord(lon)
-            }
+        val uniqueLocations = locations
             .distinct()
 
-        for ((gridLat, gridLon) in uniqueGridCells) {
-            val cached = geocodingRepository.getFromCacheByGrid(gridLat, gridLon)
+        for ((latitude, longitude) in uniqueLocations) {
+            val cached = geocodingRepository.getFromCache(latitude, longitude)
             if (cached != null) {
-                // Update drive aggregates in this grid cell
-                aggregateDao.updateDriveLocationsInGrid(
+                // Update drive aggregates by exact coordinate
+                aggregateDao.updateDriveLocationsByCoordinate(
                     carId = carId,
-                    gridLat = gridLat,
-                    gridLon = gridLon,
+                    latitude = latitude,
+                    longitude = longitude,
                     countryCode = cached.countryCode,
                     countryName = cached.countryName,
                     regionName = cached.regionName,
                     city = cached.city
                 )
-                // Update charge aggregates in this grid cell
-                aggregateDao.updateChargeLocationsInGrid(
+                // Update charge aggregates by exact coordinate
+                aggregateDao.updateChargeLocationsByCoordinate(
                     carId = carId,
-                    gridLat = gridLat,
-                    gridLon = gridLon,
+                    latitude = latitude,
+                    longitude = longitude,
                     countryCode = cached.countryCode,
                     countryName = cached.countryName,
                     regionName = cached.regionName,

@@ -102,7 +102,7 @@ class GeocodeWorker @AssistedInject constructor(
             if (result != null) {
                 Log.d(TAG, "Geocoded: ${result.city}, ${result.countryName}")
                 // Update aggregates that match this grid cell
-                updateAggregatesWithLocation(item.carId, result)
+                updateAggregatesWithLocation(item.carId, item.latitude, item.longitude, result)
 
                 // Update progress tracking
                 geocodingRepository.markGeocoded(item.carId)
@@ -169,23 +169,28 @@ class GeocodeWorker @AssistedInject constructor(
     /**
      * Update drive and charge aggregates that match the geocoded grid cell.
      */
-    private suspend fun updateAggregatesWithLocation(carId: Int, cache: GeocodeCache) {
-        // Update drive aggregates in this grid cell
-        aggregateDao.updateDriveLocationsInGrid(
+    private suspend fun updateAggregatesWithLocation(
+        carId: Int,
+        latitude: Double,
+        longitude: Double,
+        cache: GeocodeCache
+    ) {
+        // Update drive aggregates by exact original coordinate
+        aggregateDao.updateDriveLocationsByCoordinate(
             carId = carId,
-            gridLat = cache.gridLat,
-            gridLon = cache.gridLon,
+            latitude = latitude,
+            longitude = longitude,
             countryCode = cache.countryCode,
             countryName = cache.countryName,
             regionName = cache.regionName,
             city = cache.city
         )
 
-        // Update charge aggregates in this grid cell
-        aggregateDao.updateChargeLocationsInGrid(
+        // Update charge aggregates by exact original coordinate
+        aggregateDao.updateChargeLocationsByCoordinate(
             carId = carId,
-            gridLat = cache.gridLat,
-            gridLon = cache.gridLon,
+            latitude = latitude,
+            longitude = longitude,
             countryCode = cache.countryCode,
             countryName = cache.countryName,
             regionName = cache.regionName,

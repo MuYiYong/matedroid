@@ -228,6 +228,13 @@
     <string name="settings_primary_server">Servidor principal</string>
     <string name="settings_secondary_server">Servidor secundario</string>
     <string name="settings_connected">Conectado</string>
+    <string name="settings_error_server_url_required">La URL del servidor es obligatoria</string>
+    <string name="settings_error_url_must_start_http">La URL debe comenzar con http:// o https://</string>
+    <string name="settings_error_primary_not_tested">La URL principal no se probó</string>
+    <string name="settings_error_secondary_url_must_start_http">La URL secundaria debe comenzar con http:// o https://</string>
+    <string name="settings_error_save_failed">No se pudieron guardar los ajustes</string>
+    <string name="settings_resync_started_success">Resincronización completa iniciada. Se borraron todos los datos en caché. Revisa la pantalla de Estadísticas para ver el progreso.</string>
+    <string name="settings_resync_failed">No se pudo iniciar la resincronización: %1$s</string>
 
     <!-- Link to GitHub issues page shown below version number -->
     <string name="settings_report_issue">Reportar un problema</string>
@@ -306,6 +313,7 @@
     <string name="from">Desde</string>
     <string name="to">Hasta</string>
     <string name="unknown_location">Ubicación desconocida</string>
+    <string name="resolving_location">Resolviendo ubicación…</string>
     <string name="started">Inicio</string>
     <string name="ended">Fin</string>
     <!-- %s is the duration string (e.g., "1h 23m") -->
@@ -437,7 +445,7 @@
 
     <!-- Degradation info dialog -->
     <string name="estimated_degradation_title">Degradación Estimada</string>
-    <string name="estimated_degradation_message">La degradación de la batería se estima basándose en datos de Teslamate.\n\n• Capacidad (%): Salud restante de la batería comparada con nueva\n• Pérdida (kWh): Capacidad energética perdida por degradación\n• Pérdida (%): Porcentaje de la capacidad original perdida\n\n\nNota: Esta es una estimación. Tesla no proporciona datos oficiales de degradación.</string>
+    <string name="estimated_degradation_message" formatted="false">La degradación de la batería se estima basándose en datos de TeslaMate.\n\n• Capacidad (%): Salud restante de la batería comparada con nueva\n• Pérdida (kWh): Capacidad energética perdida por degradación\n• Pérdida (%): Porcentaje de la capacidad original perdida\n\n\nNota: Esta es una estimación. Tesla no proporciona datos oficiales de degradación.</string>
 
     <!-- Range section -->
     <string name="range">Autonomía</string>
@@ -455,7 +463,7 @@
 
     <!-- Current charge info dialog -->
     <string name="current_charge_title">Carga Actual</string>
-    <string name="current_charge_message">Muestra el estado de carga actual de tu batería.\n\n• Batería (%): El nivel de carga mostrado en el salpicadero\n• Utilizable (%): Carga realmente utilizable (Tesla reserva un pequeño búfer para protección)\n\nEsta es la carga actual, no la salud a largo plazo de la batería.</string>
+    <string name="current_charge_message" formatted="false">Muestra el estado de carga actual de tu batería.\n\n• Batería (%): El nivel de carga mostrado en el salpicadero\n• Utilizable (%): Carga realmente utilizable (Tesla reserva un pequeño búfer para protección)\n\nEsta es la carga actual, no la salud a largo plazo de la batería.</string>
 
     <!-- Range information section -->
     <string name="range_information">Información de Autonomía</string>
@@ -977,6 +985,9 @@
     <string name="debug_tpms_simulate_warning">Simular Aviso TPMS</string>
     <string name="debug_tpms_clear_state">Limpiar Estado TPMS</string>
     <string name="debug_tpms_run_now">Run TPMS Check Now</string>
+    <string name="debug_tpms_simulated_message">Aviso TPMS simulado para %1$s</string>
+    <string name="debug_tpms_state_cleared_message">Estado TPMS limpiado</string>
+    <string name="debug_tpms_check_triggered_message">Comprobación TPMS activada - revisa logcat para TpmsPressureWorker</string>
 
     <!-- ==================== Charging Notifications ==================== -->
     <!-- Notification channel name for charging session alerts -->

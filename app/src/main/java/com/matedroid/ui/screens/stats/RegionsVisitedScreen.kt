@@ -1,10 +1,5 @@
 package com.matedroid.ui.screens.stats
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.GradientDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -46,7 +41,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,10 +61,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.BitmapDescriptorFactory
+import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.LatLngBounds
+import com.amap.api.maps.model.MarkerOptions
+import com.amap.api.maps.model.PolygonOptions
 import com.matedroid.R
 import com.matedroid.data.repository.CountryBoundary
 import com.matedroid.domain.model.ChargeLocation
@@ -78,18 +75,13 @@ import com.matedroid.domain.model.CountryRecord
 import com.matedroid.domain.model.DriveLocation
 import com.matedroid.domain.model.RegionRecord
 import com.matedroid.domain.model.YearFilter
+import com.matedroid.domain.model.wgs84ToGcj02
 import com.matedroid.ui.icons.CustomIcons
+import com.matedroid.ui.components.AmapViewContainer
 import com.matedroid.ui.theme.CarColorPalette
 import com.matedroid.ui.theme.CarColorPalettes
 import com.matedroid.ui.theme.StatusSuccess
 import com.matedroid.ui.theme.StatusWarning
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.BoundingBox
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polygon
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -466,7 +458,7 @@ private fun YearFilterRow(
 
 /**
  * Map card showing charge or drive locations in a country with a toggle to switch between views.
- * Uses OSM tiles with custom styled markers.
+ * Uses AMap tiles with custom styled markers.
  * Optionally highlights the country when boundary data is available.
  */
 @Composable
@@ -491,6 +483,17 @@ private fun CountryMapCard(
     val acColorArgb = acColor.toArgb()
     val dcColorArgb = dcColor.toArgb()
     val driveColorArgb = driveColor.toArgb()
+    val mapUpdateKey = buildString {
+        append(mapViewMode.name)
+        append("|")
+        append(chargeTypeFilter.name)
+        append("|")
+        append(chargeLocations.size)
+        append("|")
+        append(driveLocations.size)
+        append("|")
+        append(countryBoundary?.polygons?.size ?: 0)
+    }
 
     // Track if initial zoom has been done (only zoom once when page first opens)
     var hasInitialZoom by remember { mutableStateOf(false) }
@@ -557,100 +560,89 @@ private fun CountryMapCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .height(230.dp)
                     .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
-                DisposableEffect(Unit) {
-                    Configuration.getInstance().userAgentValue = "MateDroid/1.0"
-                    onDispose { }
-                }
+                AmapViewContainer(
+                    modifier = Modifier.fillMaxSize(),
+                    updateKey = mapUpdateKey,
+                    onMapUpdate = { map ->
+                        map.clear()
 
-                AndroidView(
-                    factory = { ctx ->
-                        MapView(ctx).apply {
-                            setTileSource(TileSourceFactory.MAPNIK)
-                            setMultiTouchControls(true)
-                        }
-                    },
-                    update = { mapView ->
-                        // Clear all overlays except keep any info windows
-                        mapView.overlays.clear()
-
-                        // Add country highlight if boundary is available
                         countryBoundary?.let { boundary ->
-                            val highlights = createCountryHighlightOverlays(boundary, acColorArgb)
-                            mapView.overlays.addAll(highlights)
+                            boundary.polygons.forEach { ring ->
+                                if (ring.size >= 3) {
+                                    map.addPolygon(
+                                        PolygonOptions()
+                                            .addAll(ring.map { (lat, lon) -> LatLng(lat, lon) })
+                                            .strokeColor(acColorArgb)
+                                            .strokeWidth(3f)
+                                            .fillColor(
+                                                android.graphics.Color.argb(
+                                                    25,
+                                                    android.graphics.Color.red(acColorArgb),
+                                                    android.graphics.Color.green(acColorArgb),
+                                                    android.graphics.Color.blue(acColorArgb)
+                                                )
+                                            )
+                                    )
+                                }
+                            }
                         }
 
-                        // Add markers based on current mode
+                        val boundsBuilder = LatLngBounds.builder()
+                        var hasPoints = false
+
                         when (mapViewMode) {
                             MapViewMode.CHARGES -> {
                                 chargeLocations.forEach { charge ->
-                                    val geoPoint = GeoPoint(charge.latitude, charge.longitude)
-                                    val markerColor = if (charge.isDcCharge) dcColorArgb else acColorArgb
+                                    val (gcjLat, gcjLon) = wgs84ToGcj02(charge.latitude, charge.longitude)
+                                    val point = LatLng(gcjLat, gcjLon)
+                                    hasPoints = true
+                                    boundsBuilder.include(point)
 
-                                    val marker = Marker(mapView).apply {
-                                        position = geoPoint
-                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                                        title = charge.address
-                                        snippet = "%.1f kWh".format(charge.energyAddedKwh)
-
-                                        val dotDrawable = GradientDrawable().apply {
-                                            shape = GradientDrawable.OVAL
-                                            setSize(32, 32)
-                                            setColor(markerColor)
-                                            setStroke(4, android.graphics.Color.WHITE)
-                                        }
-                                        icon = dotDrawable
+                                    val hue = if (charge.isDcCharge) {
+                                        BitmapDescriptorFactory.HUE_ORANGE
+                                    } else {
+                                        BitmapDescriptorFactory.HUE_GREEN
                                     }
-                                    mapView.overlays.add(marker)
-                                }
 
-                                // Only zoom on initial load
-                                if (!hasInitialZoom && chargeLocations.isNotEmpty()) {
-                                    val boundingBox = calculateChargeBoundingBox(chargeLocations)
-                                    mapView.post {
-                                        mapView.zoomToBoundingBox(boundingBox, false, 60)
-                                        hasInitialZoom = true
-                                    }
+                                    map.addMarker(
+                                        MarkerOptions()
+                                            .position(point)
+                                            .title(charge.address)
+                                            .snippet("%.1f kWh".format(charge.energyAddedKwh))
+                                            .icon(BitmapDescriptorFactory.defaultMarker(hue))
+                                    )
                                 }
                             }
+
                             MapViewMode.DRIVES -> {
                                 driveLocations.forEach { drive ->
-                                    val geoPoint = GeoPoint(drive.latitude, drive.longitude)
+                                    val (gcjLat, gcjLon) = wgs84ToGcj02(drive.latitude, drive.longitude)
+                                    val point = LatLng(gcjLat, gcjLon)
+                                    hasPoints = true
+                                    boundsBuilder.include(point)
 
-                                    val marker = Marker(mapView).apply {
-                                        position = geoPoint
-                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                                        title = drive.address
-                                        snippet = "%,.1f km".format(drive.distanceKm)
-
-                                        val dotDrawable = GradientDrawable().apply {
-                                            shape = GradientDrawable.OVAL
-                                            setSize(28, 28)
-                                            setColor(driveColorArgb)
-                                            setStroke(3, android.graphics.Color.WHITE)
-                                        }
-                                        icon = dotDrawable
-                                    }
-                                    mapView.overlays.add(marker)
-                                }
-
-                                // Only zoom on initial load
-                                if (!hasInitialZoom && driveLocations.isNotEmpty()) {
-                                    val boundingBox = calculateDriveBoundingBox(driveLocations)
-                                    mapView.post {
-                                        mapView.zoomToBoundingBox(boundingBox, false, 60)
-                                        hasInitialZoom = true
-                                    }
+                                    map.addMarker(
+                                        MarkerOptions()
+                                            .position(point)
+                                            .title(drive.address)
+                                            .snippet("%,.1f km".format(drive.distanceKm))
+                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                                    )
                                 }
                             }
                         }
 
-                        mapView.invalidate()
-                    },
-                    modifier = Modifier.fillMaxSize()
+                        if (!hasInitialZoom && hasPoints) {
+                            map.moveCamera(
+                                CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 60)
+                            )
+                            hasInitialZoom = true
+                        }
+                    }
                 )
 
                 // Legend overlay at bottom-left
@@ -852,106 +844,6 @@ private fun MapModeToggle(
     }
 }
 
-/**
- * Calculate bounding box that contains all charge locations with some padding.
- */
-private fun calculateChargeBoundingBox(chargeLocations: List<ChargeLocation>): BoundingBox {
-    if (chargeLocations.isEmpty()) {
-        // Default to Europe if no locations
-        return BoundingBox(55.0, 15.0, 35.0, -10.0)
-    }
-
-    var minLat = Double.MAX_VALUE
-    var maxLat = Double.MIN_VALUE
-    var minLon = Double.MAX_VALUE
-    var maxLon = Double.MIN_VALUE
-
-    chargeLocations.forEach { location ->
-        minLat = minOf(minLat, location.latitude)
-        maxLat = maxOf(maxLat, location.latitude)
-        minLon = minOf(minLon, location.longitude)
-        maxLon = maxOf(maxLon, location.longitude)
-    }
-
-    // Add some padding (about 10% on each side)
-    val latPadding = (maxLat - minLat) * 0.15
-    val lonPadding = (maxLon - minLon) * 0.15
-
-    // Ensure minimum padding for single point
-    val minPadding = 0.01
-    val effectiveLatPadding = maxOf(latPadding, minPadding)
-    val effectiveLonPadding = maxOf(lonPadding, minPadding)
-
-    return BoundingBox(
-        maxLat + effectiveLatPadding,  // north
-        maxLon + effectiveLonPadding,  // east
-        minLat - effectiveLatPadding,  // south
-        minLon - effectiveLonPadding   // west
-    )
-}
-
-/**
- * Calculate bounding box that contains all drive locations with some padding.
- */
-private fun calculateDriveBoundingBox(driveLocations: List<DriveLocation>): BoundingBox {
-    if (driveLocations.isEmpty()) {
-        // Default to Europe if no locations
-        return BoundingBox(55.0, 15.0, 35.0, -10.0)
-    }
-
-    var minLat = Double.MAX_VALUE
-    var maxLat = Double.MIN_VALUE
-    var minLon = Double.MAX_VALUE
-    var maxLon = Double.MIN_VALUE
-
-    driveLocations.forEach { location ->
-        minLat = minOf(minLat, location.latitude)
-        maxLat = maxOf(maxLat, location.latitude)
-        minLon = minOf(minLon, location.longitude)
-        maxLon = maxOf(maxLon, location.longitude)
-    }
-
-    // Add some padding (about 10% on each side)
-    val latPadding = (maxLat - minLat) * 0.15
-    val lonPadding = (maxLon - minLon) * 0.15
-
-    // Ensure minimum padding for single point
-    val minPadding = 0.01
-    val effectiveLatPadding = maxOf(latPadding, minPadding)
-    val effectiveLonPadding = maxOf(lonPadding, minPadding)
-
-    return BoundingBox(
-        maxLat + effectiveLatPadding,  // north
-        maxLon + effectiveLonPadding,  // east
-        minLat - effectiveLatPadding,  // south
-        minLon - effectiveLonPadding   // west
-    )
-}
-
-/**
- * Create country boundary overlays that highlight the selected country.
- * Returns a list of polygons - one for each part of the country (mainland + islands).
- */
-private fun createCountryHighlightOverlays(boundary: CountryBoundary, accentColor: Int): List<Polygon> {
-    return boundary.polygons.mapIndexed { index, ring ->
-        Polygon().apply {
-            id = "country_boundary_$index"
-            points = ring.map { (lat, lon) -> GeoPoint(lat, lon) }
-
-            // Light fill with the accent color (very subtle)
-            fillColor = android.graphics.Color.argb(25,
-                android.graphics.Color.red(accentColor),
-                android.graphics.Color.green(accentColor),
-                android.graphics.Color.blue(accentColor)
-            )
-
-            // Visible stroke in accent color
-            strokeColor = accentColor
-            strokeWidth = 3f
-        }
-    }
-}
-
 @Composable
 private fun RegionCard(
     region: RegionRecord,
@@ -1122,64 +1014,13 @@ private fun formatDate(dateStr: String): String {
  */
 private fun getLocalizedCountryName(countryCode: String): String {
     return try {
-        Locale("", countryCode).getDisplayCountry(Locale.getDefault())
+        Locale.Builder()
+            .setRegion(countryCode.uppercase(Locale.ROOT))
+            .build()
+            .getDisplayCountry(Locale.getDefault())
             .takeIf { it.isNotBlank() && it != countryCode } ?: countryCode
     } catch (e: Exception) {
         countryCode
     }
 }
 
-/**
- * Create a steering wheel drawable for drive markers on the map.
- * Draws a circular background with a simple steering wheel shape.
- */
-private fun createSteeringWheelDrawable(
-    context: android.content.Context,
-    color: Int,
-    size: Int = 36
-): android.graphics.drawable.Drawable {
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-    val center = size / 2f
-    val radius = size / 2f - 2f
-
-    // Draw white circle background with border
-    paint.color = android.graphics.Color.WHITE
-    paint.style = Paint.Style.FILL
-    canvas.drawCircle(center, center, radius, paint)
-
-    // Draw colored border
-    paint.color = color
-    paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 3f
-    canvas.drawCircle(center, center, radius - 1.5f, paint)
-
-    // Draw steering wheel shape
-    paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 2.5f
-    paint.strokeCap = Paint.Cap.ROUND
-
-    // Outer ring
-    val wheelRadius = radius * 0.6f
-    canvas.drawCircle(center, center, wheelRadius, paint)
-
-    // Center hub
-    paint.style = Paint.Style.FILL
-    canvas.drawCircle(center, center, radius * 0.15f, paint)
-
-    // Three spokes at 90°, 210°, 330°
-    paint.style = Paint.Style.STROKE
-    val spokeLength = wheelRadius - radius * 0.15f
-    for (angle in listOf(270.0, 150.0, 30.0)) {
-        val rad = Math.toRadians(angle)
-        val startX = center + (radius * 0.15f * kotlin.math.cos(rad)).toFloat()
-        val startY = center + (radius * 0.15f * kotlin.math.sin(rad)).toFloat()
-        val endX = center + (wheelRadius * kotlin.math.cos(rad)).toFloat()
-        val endY = center + (wheelRadius * kotlin.math.sin(rad)).toFloat()
-        canvas.drawLine(startX, startY, endX, endY, paint)
-    }
-
-    return BitmapDrawable(context.resources, bitmap)
-}

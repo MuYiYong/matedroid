@@ -38,23 +38,30 @@ This data never leaves your device except when communicating with your Teslamate
 
 ## Third-Party Services
 
-MateDroid uses two external services to enhance functionality:
+MateDroid uses external services to enhance functionality:
 
-### 1. OpenStreetMap Nominatim (Geocoding)
+### 1. AMap (Gaode) Geocoding
 
-- **Purpose:** Convert GPS coordinates to human-readable addresses
+- **Purpose:** Convert GPS coordinates to human-readable addresses (primary provider in Chinese mainland)
+- **Data sent:** Latitude and longitude coordinates
+- **Provider:** AutoNavi (AMap/Gaode)
+- **Privacy policy:** https://lbs.amap.com/pages/privacy/
+
+### 2. OpenStreetMap Nominatim (Geocoding Fallback)
+
+- **Purpose:** Fallback geocoding provider when AMap geocoding is unavailable
 - **Data sent:** Latitude and longitude coordinates (rounded to ~11m precision)
 - **Provider:** OpenStreetMap Foundation
 - **Privacy policy:** https://osmfoundation.org/wiki/Privacy_Policy
 
-### 2. Open-Meteo (Weather Data)
+### 3. Open-Meteo (Weather Data)
 
 - **Purpose:** Display historical weather conditions along drive routes
 - **Data sent:** Latitude, longitude, and date range
 - **Provider:** Open-Meteo (open-source weather API)
 - **Privacy policy:** https://open-meteo.com/en/terms
 
-Both services receive only location coordinates and timestamps, with no identifying information about you or your vehicle.
+These services receive only location coordinates and timestamps, with no identifying information about you or your vehicle.
 
 ## What We Do NOT Collect
 

@@ -2,6 +2,7 @@ package com.matedroid.di
 
 import android.annotation.SuppressLint
 import com.matedroid.BuildConfig
+import com.matedroid.data.api.AmapGeocodingApi
 import com.matedroid.data.api.NominatimApi
 import com.matedroid.data.api.OpenMeteoApi
 import com.matedroid.data.api.TeslamateApi
@@ -59,6 +60,22 @@ object NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(NominatimApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAmapGeocodingApi(moshi: Moshi): AmapGeocodingApi {
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl("https://restapi.amap.com/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(AmapGeocodingApi::class.java)
     }
 
     @Provides

@@ -1,9 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
 }
 
 // Room schema export location for migrations
@@ -19,8 +28,29 @@ android {
         applicationId = "com.matedroid"
         minSdk = 28
         targetSdk = 36
-        versionCode = 32
-        versionName = "1.1.0-beta3"
+        versionCode = 33
+        versionName = "1.1.0"
+
+        val amapApiKey =
+            (project.findProperty("AMAP_API_KEY") as? String)
+                ?: localProperties.getProperty("AMAP_API_KEY", "")
+
+        val amapWebApiKey =
+            (project.findProperty("AMAP_WEB_API_KEY") as? String)
+                ?: localProperties.getProperty("AMAP_WEB_API_KEY", "")
+
+        val amapGeocodingStrictCn =
+            (project.findProperty("AMAP_GEOCODING_STRICT_CN") as? String)
+                ?.toBooleanStrictOrNull()
+                ?: localProperties.getProperty("AMAP_GEOCODING_STRICT_CN", "true").toBooleanStrictOrNull()
+                ?: true
+
+        manifestPlaceholders["AMAP_API_KEY"] =
+            amapApiKey
+
+        buildConfigField("String", "AMAP_API_KEY", "\"$amapApiKey\"")
+        buildConfigField("String", "AMAP_WEB_API_KEY", "\"$amapWebApiKey\"")
+        buildConfigField("boolean", "AMAP_GEOCODING_STRICT_CN", amapGeocodingStrictCn.toString())
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -107,6 +137,7 @@ android {
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
@@ -151,7 +182,7 @@ dependencies {
     implementation(libs.vico.compose.m3)
 
     // Maps
-    implementation(libs.osmdroid)
+    implementation(libs.amap)
 
     // Testing
     testImplementation(libs.junit)
